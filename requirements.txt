@@ -1,0 +1,8 @@
+# Pinned deliberately, and to the versions actually verified to build this site.
+#
+# Material for MkDocs warns that MkDocs 2.0 is a backward-incompatible rewrite
+# with no migration path and no license yet. An unpinned install could stop
+# building at any point, and a portfolio repo has to still work for whoever
+# clones it in two years.
+mkdocs==1.6.1
+mkdocs-material==9.7.7

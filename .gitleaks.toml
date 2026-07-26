@@ -1,0 +1,24 @@
+# Baseline: reglas por defecto de gitleaks más las de este proyecto.
+[extend]
+useDefault = true
+
+[[rules]]
+id = "telegram-bot-token"
+description = "Telegram bot token"
+regex = '''[0-9]{8,10}:AA[A-Za-z0-9_-]{33}'''
+tags = ["telegram", "token"]
+
+[[rules]]
+id = "private-ipv4"
+description = "Private LAN address — topology is deliberately withheld from this repo"
+regex = '''\b(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3})\b'''
+tags = ["topology"]
+
+[[rules]]
+id = "absolute-host-path"
+description = "Absolute path from the author's machine"
+regex = '''/(Volumes|Users)/[A-Za-z]'''
+tags = ["path"]
+
+[allowlist]
+paths = ['''\.gitleaks\.toml$''']

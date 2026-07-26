@@ -1,0 +1,23 @@
+# MkDocs build output
+site/
+
+# Runtime data created by the scripts if you actually run them here
+src/data/
+*.db
+*.db-shm
+*.db-wal
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Secrets — nothing here should ever contain credentials, but just in case
+*.env
+.secrets/
+*.key
+*.pem
+
+# OS
+.DS_Store

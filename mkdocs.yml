@@ -1,0 +1,76 @@
+site_name: Homelab AI Platform
+site_description: >-
+  A self-hosted AI platform running on a single Mac Mini: a Telegram agent with
+  cost-aware model routing, a hybrid-search RAG over 1,991 documents, and 41
+  containers with instrumented auto-remediation.
+site_author: Miquel Blanch
+
+theme:
+  name: material
+  language: en
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - content.code.copy
+    - content.code.annotate
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Overview: index.md
+  - Architecture: architecture.md
+  - Case studies:
+      - Reliability: case-studies/reliability.md
+      - Security review: case-studies/security.md
+  - Decisions and mistakes: decisions.md
+
+# Páginas aún sin escribir: se excluyen del build para que no queden
+# accesibles por URL. Quitar de aquí cuando tengan contenido.
+exclude_docs: |
+  case-studies/agent.md
+  case-studies/rag.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/miquelblanch
+  generator: false
+
+copyright: >-
+  Written by Miquel Blanch. Network addresses, domains and credentials
+  in this documentation are illustrative.
