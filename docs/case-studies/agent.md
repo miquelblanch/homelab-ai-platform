@@ -239,7 +239,7 @@ El agente expone comandos dedicados que consultan el RAG desde Telegram, y tambi
 
 Lo relevante desde el punto de vista del agente es que la recuperación es **una herramienta más**: el modelo decide cuándo invocarla. Eso significa que la calidad de la respuesta depende de dos cosas encadenadas — que el modelo decida buscar, y que la búsqueda devuelva lo correcto — y que un fallo en cualquiera de las dos produce el mismo síntoma.
 
-El motor de recuperación —búsqueda híbrida, embeddings locales, fusión por rango— está descrito en [Arquitectura](../architecture.md#la-base-de-conocimiento).
+El motor de recuperación está descrito en [El RAG](rag.md).
 
 ---
 

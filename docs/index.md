@@ -48,6 +48,10 @@ Ese es el hilo que recorre toda esta documentación: la diferencia entre un sist
 
     Enrutado de modelos por coste, tool calling contra infraestructura real, aprobación humana, y las tres formas en que un modelo local de 9B falló en silencio.
 
+- **[El RAG](case-studies/rag.md)**
+
+    Recuperación híbrida y fusión por rango, embeddings locales, y por qué la parte difícil de un RAG no es la búsqueda sino la ingesta.
+
 - **[Fiabilidad](case-studies/reliability.md)**
 
     Persistencia de métricas, remediación verificada, cortacircuitos, retención con agregación, y latidos para las tareas programadas.

@@ -38,14 +38,10 @@ nav:
   - Arquitectura: architecture.md
   - Casos de estudio:
       - El agente: case-studies/agent.md
+      - El RAG: case-studies/rag.md
       - Fiabilidad: case-studies/reliability.md
       - Auditoría de seguridad: case-studies/security.md
   - Decisiones y errores: decisions.md
-
-# Páginas aún sin escribir: se excluyen del build para que no queden
-# accesibles por URL. Quitar de aquí cuando tengan contenido.
-exclude_docs: |
-  case-studies/rag.md
 
 markdown_extensions:
   - admonition
