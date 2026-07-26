@@ -2,34 +2,63 @@
 
 Las demás páginas describen un sistema que funciona. Esta va de cómo llegó hasta ahí, que fue bastante menos limpio.
 
+Está dividida en dos mitades. Arriba, decisiones que aguantaron, cada una con la condición bajo la cual dejaría de ser correcta. Abajo, ocho errores, con lo que costaron y lo que cambió.
+
 ---
 
 ## Decisiones que aguantaron
 
-Cada una va con la condición bajo la cual deja de ser correcta, porque una decisión sin condición de reversión es una preferencia.
+Cada una lleva su condición de reversión, porque **una decisión sin condición de reversión es una preferencia**. Si no sabes decir bajo qué circunstancias tu elección sería equivocada, no has elegido: has adoptado una costumbre.
 
-**El agente corre nativo, no en un contenedor.**
-Gestiona el runtime de contenedores. Meterlo dentro de aquello que gestiona crea un bucle en el que no puede reiniciarse a sí mismo, y el modo de fallo es el peor posible: solo aparece cuando algo ya ha ido mal.
-*Revertir cuando* el agente deje de tocar el runtime.
+### El agente corre nativo, no en un contenedor
 
-**SQLite en vez de Prometheus.**
-Un nodo, intervalo de cinco minutos, unas pocas decenas de series. SQLite significa ningún contenedor extra, ninguna configuración de scraping, ningún subsistema de retención, y un lenguaje de consulta que ya conozco. Prometheus y Grafana necesitarían a su vez su propia monitorización.
-*Revertir en torno a* diez nodos, o la primera vez que quiera reglas de alerta expresadas sobre las propias métricas en lugar de sobre las comprobaciones en crudo.
+El agente gestiona el runtime de contenedores: lista contenedores, lee sus logs, los reinicia. Meterlo dentro de aquello que gestiona crea una dependencia circular.
 
-**Modelo local para las tareas programadas, cloud para lo interactivo.**
-El trabajo programado corre sin supervisión y a menudo; su coste tiene que ser cero. El interactivo tiene a un humano esperando, así que gana la calidad.
-*Revertir por tarea* — que es exactamente lo que pasó con las multi-tool, más abajo.
+El modo de fallo es el peor de todos: **solo aparece cuando algo ya ha ido mal**. Mientras Docker funciona, no notas nada. El día que Docker tiene un problema, el agente que podría diagnosticarlo está caído exactamente por ese problema, y además no puede reiniciarse a sí mismo porque el mecanismo de reinicio es el que está roto.
 
-**Los monitores nunca lanzan excepciones.**
-Todas las funciones de las capas de persistencia y de latidos capturan sus propias excepciones y devuelven un valor neutro. En código de aplicación sería mala práctica. En un monitor, una excepción no capturada significa dejar de enterarte de *todo lo demás*, que es estrictamente peor que perder una muestra.
+Es el mismo principio por el que un sistema de monitorización no debe depender de la infraestructura que vigila.
+
+*Revertir cuando* el agente deje de tocar el runtime de contenedores.
+
+### SQLite en vez de Prometheus
+
+Un nodo, intervalo de cinco minutos, unas pocas decenas de series.
+
+En ese régimen, SQLite significa: ningún contenedor extra que mantener, ninguna configuración de scraping, ningún subsistema de retención que aprender, un lenguaje de consulta que ya conozco, y un fichero que entra en el backup nocturno sin hacer nada especial.
+
+Prometheus y Grafana traerían descubrimiento automático de objetivos, un lenguaje de consulta pensado para series temporales, y alertas expresadas sobre las propias métricas. Todo eso vale mucho con muchos nodos. Con uno, son dos servicios más que **a su vez necesitan monitorización**, para resolver un problema que hoy cabe en un fichero de 3 MB.
+
+*Revertir en torno a* diez nodos, o la primera vez que quiera reglas de alerta calculadas sobre las series en lugar de sobre las comprobaciones en crudo.
+
+### Modelo local para las tareas programadas, cloud para lo interactivo
+
+El trabajo programado corre sin supervisión, a menudo, y arrastra contexto. Su coste tiene que ser cero o crece mientras nadie mira. El interactivo tiene a un humano esperando, así que manda la calidad y la latencia.
+
+*Revertir por tarea* — que es exactamente lo que pasó con las multi-tool, contado más abajo. La regla no es "local siempre"; es "local por defecto, y se sube lo que demuestre que lo necesita".
+
+### Los monitores nunca lanzan excepciones
+
+Todas las funciones de las capas de persistencia y de latidos capturan sus propias excepciones y devuelven un valor neutro.
+
+En código de aplicación esto sería mala práctica y de las peores: tragarse excepciones esconde bugs y hace imposible depurar. En un monitor la ecuación se invierte. Una excepción no capturada mata el proceso, y eso significa **dejar de enterarte de todo lo demás** hasta que alguien lo mire. Perder una muestra de métricas es un daño trivial; perder la monitorización entera porque falló una escritura a disco es un daño grande.
+
+El contrato está verificado en los propios tests: hay aserciones que apuntan la base de datos a rutas donde no se puede escribir y comprueban que la función devuelve un valor neutro en lugar de propagar.
+
 *Revertir* en ningún caso. La alternativa es un monitor que se muere en silencio.
 
-**Agregar antes de borrar.**
-La retención comprime a medias horarias antes de purgar el detalle, y la purga solo toca horas que ya existen en el agregado. La red de seguridad vive en el SQL, no en el llamante.
-*Revertir* nunca. Es un seguro barato contra la clase de error que solo se comete una vez.
+### Agregar antes de borrar
 
-**La auditoría es un script, no un documento.**
-El documento era el entregable que pedí. El script es el artefacto que sigue teniendo valor un año después, porque se puede volver a ejecutar y produce un número.
+La retención comprime el detalle a medias horarias antes de purgarlo, y la purga solo toca horas que **ya existen** en el agregado. Si la agregación falla, la purga no borra nada.
+
+La red de seguridad vive en la propia consulta SQL y no en el código que la llama. Es deliberado: una comprobación en el llamante se puede saltar invocando las funciones en el orden equivocado, o desde un sitio nuevo que no la conocía. Una condición dentro de la consulta no se puede esquivar.
+
+*Revertir* nunca. Es un seguro barato contra la clase de error que solo se comete una vez, porque la primera vez ya te has quedado sin los datos.
+
+### La auditoría es un script, no un documento
+
+El documento era el entregable que pedí. El script es el artefacto que sigue teniendo valor un año después, porque se puede volver a ejecutar y produce un número comparable con el anterior.
+
+Un informe describe el día que lo escribiste. Un script describe hoy. Y los sistemas derivan.
 
 ---
 
@@ -37,53 +66,67 @@ El documento era el entregable que pedí. El script es el artefacto que sigue te
 
 ### El relay que se robaba el puerto a sí mismo
 
-Se montó un relay `socat` para reenviar `0.0.0.0:PUERTO` a `127.0.0.1:PUERTO` y que un panel fuera accesible desde la LAN. El mismo puerto a los dos lados.
+**Qué monté.** Un relay `socat` para reenviar `0.0.0.0:PUERTO` a `127.0.0.1:PUERTO`, con el objetivo de que un panel que solo escuchaba en el loopback fuera accesible desde la red local. El mismo número de puerto a los dos lados.
 
-El panel ya estaba escuchando en `127.0.0.1:PUERTO`. Y el relay arrancaba antes en el boot.
+**Qué pasaba en realidad.** El panel ya estaba escuchando en `127.0.0.1:PUERTO`. Y el relay, como servicio del sistema, arrancaba **antes** en el proceso de inicio.
 
-Así que tras cada reinicio el relay ocupaba el puerto, el panel fallaba al arrancar con "address already in use", y el relay reenviaba diligentemente el tráfico hacia sí mismo. La línea de log se repetía indefinidamente. El panel quedaba caído el tiempo que tardase en darme cuenta, una vez por reinicio, durante semanas.
+Así que en cada reinicio de la máquina la secuencia era: el relay se levanta y ocupa el puerto en todas las interfaces, incluida la de loopback. El panel intenta arrancar, encuentra el puerto ocupado, falla con `address already in use` y se rinde. Y el relay, que sigue vivo y haciendo su trabajo, reenvía diligentemente todo el tráfico entrante **hacia sí mismo**.
 
-**Qué cambió:** el relay se eliminó y el panel bindea la interfaz de LAN por su cuenta. El plist está archivado con una nota que dice *no recrear*, porque el fallo se parece exactamente a un conflicto de puertos causado por otra cosa.
+**Cómo se manifestaba.** El panel simplemente no estaba. El log del panel repetía la misma línea de error indefinidamente. Y el síntoma —"address already in use"— apunta mentalmente a un proceso zombi o a otra aplicación que se ha quedado el puerto, no al componente cuya única función es hacer accesible ese mismo panel.
 
-**La lección no es "revisa tus puertos".** Es que un componente cuyo trabajo entero es la indirección apuntará encantado hacia sí mismo, y nada en las herramientas va a objetar.
+Duró semanas, reapareciendo en cada reinicio, hasta que leí el fichero de configuración del relay con atención y vi el mismo número dos veces.
+
+**Qué cambió.** El relay se eliminó, y el panel se configuró para escuchar directamente en la interfaz de red — que era lo que había que hacer desde el principio. El fichero del servicio está archivado con una nota que dice *no recrear*, precisamente porque el síntoma invita a volver a montar un relay.
+
+**La lección no es "revisa tus puertos".** Es que un componente cuyo trabajo entero es la indirección apuntará encantado hacia sí mismo, y **nada en las herramientas va a objetar**. `socat` no tiene forma de saber que el destino es él mismo, ni motivo para comprobarlo. Cualquier capa de indirección —un proxy, un reenvío, un alias de DNS, una redirección— admite ciclos que solo se detectan leyendo la configuración con ojos frescos.
 
 ---
 
 ### Un escritor de métricas que nadie echó de menos
 
-Se desmanteló un componente. Escribía métricas de contenedores en una tabla. Nada más leía esa tabla.
+**Qué pasó.** Se desmanteló un componente que, entre otras cosas, escribía métricas de contenedores en una tabla SQLite. Nada más leía esa tabla.
 
-Setenta días después fui a buscar los datos y encontré 265.365 filas, la más reciente de diez semanas antes, y ningún código en todo el repositorio que escribiera ahí. No se había roto. Lo habían borrado junto con su dueño, y la ausencia no produjo ninguna señal porque nada dependía de ella.
+**Cómo lo descubrí.** Setenta días después fui a buscar datos históricos para tener números que enseñar. Encontré 265.365 filas y una fecha máxima de diez semanas antes.
 
-**Qué cambió:** el monitor que ya estaba corriendo ganó persistencia, y la tarea programada que la mantiene ganó un latido, de modo que una segunda desaparición sí se notaría.
+La primera hipótesis fue la evidente: algo se rompió. Fui a buscar el código que escribía ahí para ver por qué fallaba, y un `grep` sobre todo el repositorio devolvió **cero resultados**. No es que el escritor fallara: no existía. Lo habían borrado junto con su dueño.
 
-**Lección:** los datos que nadie lee dejan de producirse, y te enteras cuando los necesitas.
+**Por qué nadie se enteró.** Porque no había nada que se enterara. Ningún panel mostraba esos datos, ninguna alerta dependía de ellos, ninguna tarea los leía. Una tabla que deja de recibir escrituras no genera ningún síntoma; simplemente se queda quieta, y quieta se parece mucho a normal.
+
+**Qué cambió.** El monitor que ya estaba corriendo ganó persistencia, y la tarea programada que mantiene esos datos ganó un latido, de modo que una segunda desaparición sí se notaría — porque ahora hay algo que espera activamente noticias suyas.
+
+**Lección:** los datos que nadie lee dejan de producirse, y te enteras el día que los necesitas. Y no hay alerta posible para la desaparición de algo de lo que no depende nada, así que la única defensa es que algo dependa de ello a propósito.
 
 ---
 
 ### Un 100% de éxito que medía códigos de salida
 
-El sistema de auto-remediación reportaba que sus 83 intervenciones habían tenido éxito, todas.
+**Qué reportaba.** El sistema de auto-remediación decía que sus 83 intervenciones habían tenido éxito. Las 83.
 
-Registraba éxito cuando `docker restart` devolvía 0, cosa que ocurre siempre que el daemon acepta el comando — no cuando el contenedor se mantiene en pie. Durante dos horas de abril, un contenedor estuvo a cero de memoria y cero de CPU en doce muestras consecutivas mientras el healer anotaba cuatro reinicios exitosos.
+**Qué medía.** Registraba éxito cuando `docker restart` devolvía código 0, cosa que ocurre en cuanto el daemon **acepta** la orden. No espera a que el contenedor arranque, no comprueba que siga vivo, y no sabe nada de lo que pasa después.
 
-**Qué cambió:** los reinicios se verifican contra `docker inspect` diez segundos después, y un cortacircuitos detiene el bucle tras tres intentos en seis horas.
+**La evidencia.** Durante dos horas de abril, un contenedor estuvo a cero de memoria y cero de CPU en veinticuatro muestras consecutivas — es decir, parado. En esas mismas dos horas el healer anotó cuatro reinicios exitosos.
 
-**Coste:** un contenedor consumió el 59% de todas las intervenciones automáticas del sistema durante siete semanas sin levantar una sola alerta, porque el healer funcionaba.
+**Qué cambió.** Los reinicios esperan diez segundos y después consultan `docker inspect` para saber si el contenedor está realmente corriendo. `success` significa ahora *observado en pie diez segundos después*. Y un cortacircuitos detiene el bucle tras tres intentos en seis horas, escalando a un humano con los logs del contenedor adjuntos.
 
-Desarrollo completo en [Fiabilidad](case-studies/reliability.md).
+**Coste.** Un contenedor consumió el 59% de todas las intervenciones automáticas del sistema durante siete semanas **sin levantar una sola alerta**, porque el healer funcionaba y cada recuperación se notificaba como una buena noticia aislada.
+
+Desarrollo completo, con los datos y el análisis, en [Fiabilidad](case-studies/reliability.md).
 
 ---
 
 ### Un control que reportaba lo contrario de la realidad
 
-SSH estaba configurado para autenticación solo por clave. `sshd -T` reportaba que la autenticación por contraseña estaba activa. La autenticación por contraseña funcionaba de verdad, porque con PAM en el camino puede autenticar al margen de esa directiva.
+**Qué creía.** SSH estaba configurado para autenticación solo por clave. El fichero lo decía en dos sitios.
 
-Tres respuestas distintas, y la que importaba era la que nadie había preguntado: qué pasa cuando alguien lo intenta.
+**Qué decía el control.** `sshd -T`, que es el volcado de configuración efectiva del propio demonio y en teoría la fuente de verdad, reportaba que la autenticación por contraseña estaba activa.
 
-**Qué cambió:** `AuthenticationMethods publickey`, verificado intentando un login con contraseña y siendo rechazado.
+**Qué pasaba en realidad.** La autenticación por contraseña funcionaba. Con PAM en el camino de autenticación, PAM puede autenticar al margen de esa directiva.
 
-**Y la parte que escuece:** mi script de auditoría tenía el mismo bug que mi configuración. Comprobaba `sshd -T`, así que tras el arreglo seguía reportando un fallo. Hubo que corregir el control junto con el sistema.
+Tres respuestas distintas a la misma pregunta, y la que importaba era la que nadie había hecho: **qué ocurre cuando alguien lo intenta**. Un solo intento de login con contraseña habría dado la respuesta en cinco minutos, en lugar de una cadena de hipótesis cada vez más rebuscadas sobre bloques `Match` y orden de includes.
+
+**Qué cambió.** `AuthenticationMethods publickey`, que declara el requisito en lugar de deshabilitar una opción, y por tanto cierra también los caminos alternativos. Verificado intentando un login con contraseña y siendo rechazado.
+
+**Y la parte que escuece:** mi script de auditoría tenía el mismo bug que mi configuración. Comprobaba `sshd -T`, así que **tras el arreglo seguía reportando un fallo** — porque `sshd -T` sigue diciendo lo mismo, simplemente ahora ya no importa. El control estaba equivocado antes y siguió equivocado después, en la dirección contraria. Hubo que corregirlo junto con el sistema.
 
 Desarrollo completo en [Auditoría de seguridad](case-studies/security.md).
 
@@ -91,35 +134,49 @@ Desarrollo completo en [Auditoría de seguridad](case-studies/security.md).
 
 ### "Nunca reiniciar" se convirtió calladamente en "nunca mirar"
 
-Hay un contenedor deliberadamente apagado. Se añadió a una lista `NEVER_RESTART` para que el monitor lo dejara en paz.
+**Qué quería.** Hay un contenedor deliberadamente apagado. Lo añadí a una lista `NEVER_RESTART` para que el monitor no lo levantara cada cinco minutos.
 
-El monitor implementa eso saltándose el contenedor por completo, antes de ejecutar comprobación alguna. Lo que significa que un contenedor que debería estar apagado puede llevar días corriendo sin que nada lo reporte. Que es lo que pasó: cuatro días, sano, inadvertido, hasta que leí un `docker ps` en crudo por un motivo que no tenía nada que ver.
+**Cómo está implementado.** El monitor se salta ese contenedor por completo, con un `continue` antes de ejecutar ninguna comprobación. Es la forma más directa de conseguir lo que pedí.
 
-**Qué cambió:** de momento solo la documentación, que ahora dice explícitamente que ese contenedor no tiene monitorización y que conviene verificar su estado de vez en cuando. El arreglo bueno —una categoría que signifique *observar pero nunca actuar*— no está construido.
+**La consecuencia.** Un contenedor que debería estar apagado puede estar corriendo días sin que nada lo reporte. Que es lo que pasó: cuatro días en pie, sano, invisible, hasta que leí una salida de `docker ps` en crudo por un motivo que no tenía nada que ver.
 
-**Lección:** las listas de exclusión confunden dos intenciones distintas. "No actúes sobre esto" y "no mires esto" no son la misma instrucción, y colapsarlas crea un punto ciego que crece en silencio.
+Nunca supe qué lo arrancó. Y ese es el punto: **no hay ningún registro, porque nada estaba mirando.**
+
+**Qué cambió.** De momento solo la documentación, que ahora dice explícitamente que ese contenedor no tiene monitorización de ningún tipo y que conviene verificar su estado de vez en cuando. El arreglo bueno —una categoría que signifique *observar pero nunca actuar*, separada de *ignorar por completo*— está identificado y no construido.
+
+**Lección:** las listas de exclusión confunden dos intenciones distintas. **"No actúes sobre esto" y "no mires esto" no son la misma instrucción**, y colapsarlas crea un punto ciego que además crece: cada elemento que añades a la lista por el primer motivo hereda gratis el segundo, y nadie lo nota porque la lista sigue teniendo el nombre del primero.
 
 ---
 
 ### El hardening rompió la monitorización, y la monitorización estaba mal
 
-Activar el modo sigiloso del firewall dejó al host sin responder a ICMP. El monitor de uptime externo lo comprobaba por ping, y reportó el servidor principal como caído de inmediato.
+**Qué pasó.** Activar el modo sigiloso del firewall dejó al host sin responder a ICMP, que es exactamente su propósito. El monitor de uptime externo lo comprobaba por ping, y reportó el servidor principal como caído de inmediato.
 
-El reflejo es apagar el modo sigiloso, porque ahora el monitor miente y el monitor es lo que hace ruido.
+La máquina llevaba todo el rato en pie, con todos sus servicios funcionando.
 
-**Qué cambió:** el monitor pasó a una comprobación TCP contra un puerto que de verdad sirve. Un ping demuestra que una pila de red responde a ICMP; una comprobación TCP demuestra que hay algo escuchando, que es más parecido a lo que "arriba" quería decir.
+**La tentación.** Apagar el modo sigiloso. El argumento se presenta solo: antes funcionaba, he cambiado esto, ahora está roto. Y además el monitor está mandando alertas, mientras que la medida de seguridad no se nota.
 
-**Lección:** cuando un control de seguridad rompe uno operativo, el que suele estar midiendo mal es el operativo. Pero es el que se queja, así que tiende a ganar la discusión.
+**Qué cambió.** El monitor pasó a una comprobación TCP contra un puerto que de verdad sirve. Un ping demuestra que una pila de red responde a ICMP; una comprobación TCP demuestra que el sistema está vivo, la red funciona, y hay un proceso aceptando conexiones — que es mucho más parecido a lo que "arriba" quería decir.
+
+**Lección:** cuando un control de seguridad rompe uno operativo, **el que suele estar midiendo mal es el operativo**. La medida de seguridad acaba de hacerte visible una debilidad de tu monitorización que llevaba ahí desde el principio.
+
+Pero el operativo es el que tiene el panel en rojo y el que te manda notificaciones al móvil, así que tiende a ganar la discusión. Y la forma en que gana es que debilites la medida que acabas de poner.
 
 ---
 
 ### Introduje un bug y publiqué su arreglo el mismo día
 
-Instrumentando la salud de los contenedores, registré `healthy` para todo lo que no fuera explícitamente `unhealthy`. El campo real de Docker está *vacío* cuando el contenedor no define healthcheck — y vacío no es sano, es sin comprobar.
+**Qué escribí.** Instrumentando la salud de los contenedores, registré `healthy` para todo lo que no fuera explícitamente `unhealthy`.
 
-El resultado fue un escalón en la serie temporal el día que lo añadí, causado enteramente por mi propio código. 491 de 779 filas estaban mal: el 63%.
+**Por qué está mal.** El campo de salud de Docker está *vacío* cuando el contenedor no define ningún health check, porque definirlo es opcional. Vacío no es sano: es **sin comprobar**. Confundirlos convierte una métrica de salud en una métrica de "no ha explotado todavía".
 
-**Qué cambió:** el valor se deriva del `status` almacenado, y una migración corrigió las filas existentes. Lo que hizo fiable el arreglo no fue que se ejecutara, sino que las proporciones coincidían a ambos lados de la frontera: 37,4% histórico frente a 37,0% tras la corrección.
+**Qué provocó.** Un escalón brusco en la serie temporal el día que lo añadí, causado enteramente por mi propio código. Cualquiera mirando esa gráfica dentro de seis meses concluiría que algo cambió en el sistema ese día. No cambió nada en el sistema.
+
+**Cómo lo vi.** Por casualidad, mirando por encima una muestra del agregado horario y encontrando una columna llena de ceros donde esperaba variedad.
+
+**Qué cambió.** El valor se deriva del texto de estado, que sí se guardaba íntegro, y una migración corrigió las filas ya escritas. **491 de 779 estaban mal: el 63%.**
+
+**Lo que hace fiable el arreglo** no es que se ejecutara sin errores, sino que las proporciones coinciden a ambos lados de la frontera: 37,4% en el histórico frente a 37,0% tras la corrección. Dos conjuntos de datos generados con meses de diferencia por escritores distintos, coincidiendo en medio punto porcentual.
 
 **Lección:** una migración que corre limpia y produce basura plausible es el resultado por defecto. Valida contra algo que no acabes de calcular tú.
 
@@ -127,23 +184,35 @@ El resultado fue un escalón en la serie temporal el día que lo añadí, causad
 
 ### Valores por defecto que nunca llegaron a una configuración existente
 
-El sistema de latidos lee un manifiesto que declara qué tareas se esperan. Cuando después añadí una opción para hacer push también al monitor externo, el cargador devolvía el fichero existente sin tocar — así que la clave nueva simplemente no existía en un manifiesto ya creado.
+**Qué monté.** Un sistema de latidos que lee un manifiesto declarando qué tareas se esperan y con qué antigüedad máxima. El manifiesto se crea con unos valores por defecto la primera vez que se ejecuta.
 
-El push no se enviaba nunca. Los dos comandos de verificación reportaban éxito: uno porque se saltaba el manifiesto, el otro porque la escritura local sí funcionaba. Lo pillé porque faltaba un sufijo de tres palabras en una línea de salida.
+**Qué añadí después.** Una opción para que el latido, además de escribir el fichero local, notificara a un monitor externo.
 
-**Qué cambió:** el cargador fusiona los valores por defecto en las claves ausentes y reescribe el fichero. Y los mensajes de estado ahora dicen lo que **no** hicieron, en vez de omitirlo en silencio.
+**Qué falló.** El cargador devolvía el fichero existente tal cual. Un manifiesto **ya creado** no tenía la clave nueva, así que la opción no existía para él y el push no se enviaba nunca.
 
-**Lección:** una salida que solo informa de lo que ocurrió no puede contarte lo que no ocurrió.
+**Por qué no lo detecté.** Porque las dos comprobaciones que hice daban verde, cada una por un motivo distinto. El comando de prueba de push funcionaba, porque va directo al monitor externo sin consultar el manifiesto. Y el comando de escritura del latido decía "registrado", porque el fichero local sí se escribía correctamente.
+
+Dos verificaciones, dos éxitos, y nada llegando a su destino.
+
+**Cómo lo pillé.** A una línea de salida le faltaba un sufijo de tres palabras que debería haber aparecido si el push se hubiera intentado.
+
+**Qué cambió.** El cargador fusiona los valores por defecto en las claves ausentes y reescribe el fichero, respetando lo que se haya modificado a mano. Y los mensajes de estado ahora dicen explícitamente lo que **no** hicieron, en lugar de omitirlo en silencio.
+
+**Lección:** una salida que solo informa de lo que ocurrió no puede contarte lo que no ocurrió. Si el mensaje hubiera dicho `push omitido (no configurado)` en vez de callarse, se habría visto al instante.
+
+Y la de fondo: **los valores por defecto que solo se aplican en la creación no llegan a las instalaciones existentes**, que son precisamente todas las que ya están funcionando.
 
 ---
 
 ### Comprimí la evidencia antes de analizarla
 
-La retención agregó el detalle a cinco minutos de abril en medias horarias por la mañana. Esa tarde, investigando un contenedor que se había reiniciado 49 veces, necesitaba la secuencia minuto a minuto.
+**Qué hice.** Por la mañana implementé y ejecuté la política de retención, que agregó el detalle a cinco minutos de abril en medias horarias.
 
-Las medias horarias bastaron para llegar a una conclusión. La secuencia completa se perdió de forma permanente.
+**Qué necesité por la tarde.** Investigando el contenedor que se había reiniciado 49 veces, la secuencia minuto a minuto: cuánto aguantaba entre caída y caída, si el patrón dentro de cada ráfaga era regular, si había algo periódico.
 
-**Lección:** investiga antes de comprimir. Las políticas de retención son irreversibles de una forma en que la mayoría de operaciones no lo son.
+**Qué tenía.** Medias horarias. Suficientes para llegar a la conclusión —de hecho la evidencia clave, las dos horas enteras a cero, salió de ahí— pero la secuencia fina se había perdido de forma permanente.
+
+**Lección:** investiga antes de comprimir. Las políticas de retención son **irreversibles** de una forma en que casi ninguna otra operación lo es. Puedes revertir un despliegue, restaurar una base de datos, deshacer un commit. No puedes recuperar la resolución de una serie temporal que ya has agregado.
 
 ---
 
@@ -160,8 +229,24 @@ Releyendo todo esto, casi todos son el mismo error con distinta ropa.
 | Push del latido | enviado | que se había escrito un fichero local |
 | Tareas programadas | todas presentes | todas las tareas *cargadas* presentes |
 
-Seis indicadores. Ninguno roto. Cada uno medía algo real. **Ninguno medía lo que su etiqueta prometía**, y todos estaban en verde.
+Seis indicadores. Ninguno roto. Cada uno medía algo real y lo medía correctamente. **Ninguno medía lo que su etiqueta prometía**, y todos estaban en verde.
 
-La forma común es que cada control medía lo que era fácil de medir —un código de salida, un fichero de configuración, una lista de unidades cargadas— y la etiqueta describía lo que a mí me importaba. La distancia entre esas dos cosas es invisible precisamente porque el indicador está en verde, y el verde no es un estado que nadie investigue.
+### Por qué pasa siempre lo mismo
 
-El corolario incómodo: cada punto de esta página lo encontró una persona notando algo raro. Ni uno solo lo cazó un sistema construido para cazarlo. Construir ese sistema es el siguiente trabajo obvio, y no está hecho.
+La forma común es que cada control mide **lo que es fácil de medir** y la etiqueta describe **lo que a mí me importa**.
+
+Leer un código de salida es una línea de código; comprobar que un servicio se recuperó requiere esperar, consultar el estado real y decidir qué significa "recuperado". Leer un fichero de configuración es trivial; intentar un login y verificar el rechazo exige diseñar la prueba. Listar las tareas cargadas es una llamada al sistema; saber si falta alguna requiere mantener una lista de lo esperado.
+
+En cada caso hay una versión barata y una cara, la barata se implementa primero, y la etiqueta se escribe describiendo la intención en lugar de la implementación. Después nadie vuelve.
+
+### Por qué no se detecta
+
+Porque **la distancia entre las dos cosas es invisible precisamente cuando el indicador está en verde**. Un control que falla se investiga: miras, y en cinco minutos descubres que estaba midiendo lo que no era. Un control que pasa no se mira nunca. El verde no es un estado que nadie investigue.
+
+Todos estos llevaban meses a la vista, en un informe que leo todas las mañanas.
+
+### El corolario incómodo
+
+Cada punto de esta página lo encontró **una persona notando algo raro**. El escalón en la salud lo vi de refilón mirando una muestra. El push que no se enviaba lo pillé por tres palabras que faltaban en una línea. Los 49 reinicios aparecieron porque me puse a mirar una tabla por un motivo distinto.
+
+Ni uno solo lo cazó un sistema construido para cazarlo. Y construir ese sistema —comprobaciones de coherencia sobre las propias métricas, proporciones estables entre periodos, detección de series que se paran— es el siguiente trabajo obvio, y no está hecho.
