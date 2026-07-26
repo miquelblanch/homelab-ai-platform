@@ -1,75 +1,75 @@
-# Security review
+# Auditoría de seguridad
 
-> What happens when you audit a system you built yourself, and it turns out several controls were reporting on configuration instead of behaviour.
+> Qué pasa cuando auditas un sistema que has construido tú, y resulta que varios controles informaban sobre la configuración en lugar de sobre el comportamiento.
 
-!!! info "What this page does and does not contain"
-    This describes the **method and the findings by category**, plus two closed issues that are worth reading because of *how* they were found. It contains no reproducible detail, no current configuration, and nothing about what is exposed. Every specific issue named here was fixed before this was written.
-
----
-
-## Why I did it
-
-The platform had grown by accumulation. Containers were added when I needed them, ports were opened when something did not work, and the reverse proxy config had layers nobody had revisited. Nothing had gone wrong, which is exactly the condition under which you should look.
-
-The scope was everything: the host, all containers, the services running inside them, and the router. Active audit, not a checklist read from a document — commands run against the live system, output collected, findings triaged.
+!!! info "Qué contiene y qué no contiene esta página"
+    Describe el **método y los hallazgos por categoría**, más dos incidencias ya cerradas que merecen leerse por *cómo* se encontraron. No contiene detalle reproducible, ni configuración actual, ni nada sobre qué está expuesto. Todo lo concreto que se nombra aquí estaba arreglado antes de escribirlo.
 
 ---
 
-## Method
+## Por qué la hice
 
-The audit was a single bash script covering twelve areas, run as root against the live system, producing one output file.
+La plataforma había crecido por acumulación. Los contenedores se añadían cuando hacían falta, los puertos se abrían cuando algo no funcionaba, y la configuración del proxy inverso tenía capas que nadie había vuelto a mirar. No había fallado nada, que es exactamente la condición bajo la cual hay que mirar.
 
-| Area | Examples of what was checked |
+El alcance fue todo: el host, todos los contenedores, los servicios que corren dentro y el router. Auditoría activa, no una checklist leída de un documento — comandos ejecutados contra el sistema vivo, salida recogida, hallazgos triados.
+
+---
+
+## Método
+
+La auditoría fue un único script de bash cubriendo doce áreas, ejecutado como root contra el sistema en vivo, con un solo fichero de salida.
+
+| Área | Ejemplos de qué se comprobó |
 | --- | --- |
-| Host baseline | Disk encryption, firewall state, system integrity protection, code signing enforcement |
-| Accounts | Local users, privilege, remote login configuration |
-| SSH | Authentication methods, key inventory, brute-force protection |
-| Network | Listening sockets, binding scope, service authentication |
-| Containers | Privileged mode, socket exposure, bind mounts, port binding scope |
-| Services | Inference API, automation platform, databases |
-| TLS | Certificate validity and issuance |
-| Logs | Security event logging and retention |
-| Scheduled tasks | Privilege and ownership of system-level jobs |
-| Tooling | Vulnerability scanning coverage |
+| Base del host | Cifrado de disco, estado del firewall, protección de integridad del sistema, verificación de firma de código |
+| Cuentas | Usuarios locales, privilegios, configuración de acceso remoto |
+| SSH | Métodos de autenticación, inventario de claves, protección contra fuerza bruta |
+| Red | Sockets a la escucha, ámbito de binding, autenticación de servicios |
+| Contenedores | Modo privilegiado, exposición del socket, bind mounts, ámbito de publicación de puertos |
+| Servicios | API de inferencia, plataforma de automatización, bases de datos |
+| TLS | Validez y emisión de certificados |
+| Logs | Registro de eventos de seguridad y retención |
+| Tareas programadas | Privilegios y propiedad de los jobs a nivel de sistema |
+| Herramientas | Cobertura de escaneo de vulnerabilidades |
 
-Writing the audit as a **script rather than a session** was the single most useful decision. A manual review produces a document; a script produces a number you can regenerate. Everything downstream — the sprints, the scoreboard, the ability to confirm a fix actually landed — depends on the audit being repeatable.
+Escribir la auditoría como **script y no como sesión** fue la decisión más útil de todas. Una revisión manual produce un documento; un script produce un número que puedes regenerar. Todo lo que vino después —los sprints, el marcador, la capacidad de confirmar que un arreglo aterrizó de verdad— depende de que la auditoría sea repetible.
 
 ---
 
-## What came out
+## Qué salió
 
-The first pass produced **37 findings**:
+La primera pasada produjo **37 hallazgos**:
 
-| Severity | Count |
+| Severidad | Cantidad |
 | --- | --- |
-| Critical | 11 |
-| High | 10 |
-| Medium | 8 |
-| Already correct | 8 |
+| Críticos | 11 |
+| Altos | 10 |
+| Medios | 8 |
+| Ya correctos | 8 |
 
-Eleven critical findings on a system I had built and considered reasonable. Most clustered into three classes:
+Once hallazgos críticos en un sistema que había construido yo y consideraba razonable. La mayoría se agrupaban en tres clases:
 
-**Services bound wider than they needed to be.** Things listening on all interfaces that only ever needed loopback or a single network. Individually defensible, collectively a much larger surface than intended.
+**Servicios escuchando en más interfaces de las necesarias.** Cosas publicadas en todas las interfaces cuando solo necesitaban loopback o una única red. Individualmente defendible, en conjunto una superficie bastante mayor de la pretendida.
 
-**Container privilege.** Containers running with more capability than their function required, mostly inherited from example `docker-compose` files copied at setup time and never revisited.
+**Privilegios de contenedor.** Contenedores corriendo con más capacidades de las que su función requería, heredadas en su mayoría de ficheros `docker-compose` de ejemplo copiados al montarlos y nunca revisados.
 
-**Authentication gaps on internal services.** Components deployed on the assumption that "it is only on the LAN", which is a security model right up until one device on that LAN is compromised.
+**Huecos de autenticación en servicios internos.** Componentes desplegados asumiendo que "esto solo está en la LAN", que es un modelo de seguridad válido hasta que uno de los dispositivos de esa LAN queda comprometido.
 
-None of these were exotic. They were the ordinary consequence of a system that grew one `docker run` at a time.
+Nada exótico. Eran la consecuencia ordinaria de un sistema que creció un `docker run` cada vez.
 
-The remediation plan was organised into four phases by criticality, with 26 numbered items. Phase one was executed immediately; the rest ran as sprints.
+El plan de remediación se organizó en cuatro fases por criticidad, con 26 ítems numerados. La primera fase se ejecutó de inmediato; el resto fue por sprints.
 
 ---
 
-## The finding worth reading: a control that lied
+## El hallazgo que merece leerse: un control que mentía
 
-SSH was configured for key-only authentication. The config file said so, in two places. The audit script checked it with `sshd -T`, the daemon's own effective-configuration dump.
+SSH estaba configurado para autenticación solo por clave. El fichero de configuración lo decía, en dos sitios. El script de auditoría lo comprobaba con `sshd -T`, el volcado de configuración efectiva del propio demonio.
 
-`sshd -T` reported `PasswordAuthentication yes`.
+`sshd -T` reportaba `PasswordAuthentication yes`.
 
-The obvious first hypothesis was a `Match` block overriding it at the bottom of the file. There was none. Second hypothesis: an include ordering problem. Also no.
+La primera hipótesis obvia era un bloque `Match` sobreescribiéndolo al final del fichero. No había ninguno. Segunda hipótesis: un problema de orden en los includes. Tampoco.
 
-At which point the right move is to stop reading configuration and **test the behaviour**:
+Y llegado ese punto, lo correcto es dejar de leer configuración y **probar el comportamiento**:
 
 ```bash
 ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no user@host "echo test"
@@ -80,87 +80,87 @@ user@host's password:
 test
 ```
 
-Password authentication worked. The config said no, the effective-config dump said yes, and reality agreed with neither in a way that mattered: **with PAM enabled, PAM can authenticate by password regardless of the `PasswordAuthentication` directive.** The setting is not a lie, it is just not the whole authentication path.
+La autenticación por contraseña funcionaba. La configuración decía que no, el volcado de configuración efectiva decía que sí, y la realidad no coincidía con ninguno de los dos de una forma que importaba: **con PAM en el camino, PAM puede autenticar por contraseña independientemente de la directiva `PasswordAuthentication`.** El ajuste no miente, simplemente no cubre todo el flujo de autenticación.
 
-The fix is to state the requirement rather than disable an option:
+El arreglo consiste en declarar el requisito en lugar de deshabilitar una opción:
 
 ```
 AuthenticationMethods publickey
 ```
 
-Then verify the same way it was found:
+Y verificar igual que se encontró:
 
 ```
 user@host: Permission denied (publickey).
 ```
 
-### Two lessons, and the second is the uncomfortable one
+### Dos lecciones, y la segunda es la incómoda
 
-**A configuration check is not a security check.** The audit had asked "what does the daemon say it does" instead of "what happens when someone tries". Those had different answers for months.
+**Una comprobación de configuración no es una comprobación de seguridad.** La auditoría preguntaba "qué dice el demonio que hace" en vez de "qué pasa cuando alguien lo intenta". Esas dos preguntas tuvieron respuestas distintas durante meses.
 
-**My audit script had the same bug as my configuration.** It read `sshd -T`, so after the fix it kept reporting a failure — the control was still wrong, now in the other direction. The script had to be corrected alongside the system.
+**Mi script de auditoría tenía el mismo bug que mi configuración.** Leía `sshd -T`, así que tras el arreglo seguía reportando un fallo — el control seguía equivocado, ahora en la otra dirección. Hubo que corregirlo junto con el sistema.
 
-That is the same failure mode as everything on the [Reliability](reliability.md) page, arriving from a completely different direction: **an indicator that measures the thing that is easy to measure rather than the thing you care about.** I did not notice the pattern until I had hit it in both domains.
-
----
-
-## When hardening broke the monitoring
-
-Part of the host hardening enabled the firewall's stealth mode, which stops the machine replying to ICMP.
-
-The external uptime monitor checked the host by ping.
-
-The monitor immediately reported the main server as down. It had been up the whole time.
-
-The tempting fix is to turn stealth mode back off, because the monitor is now wrong and the monitor is annoying. The correct fix is the other one: **change the monitor to a TCP check against a port that is genuinely serving.** A ping proves a network stack answers ICMP. A TCP check proves something is listening, which is closer to what "up" was supposed to mean anyway.
-
-This is worth writing down because the reflex goes the wrong way. When a security control breaks an operational control, the operational one is usually the one measuring the wrong thing — but it is the one making noise, so it wins the argument.
+Es el mismo modo de fallo que todo lo de la página de [Fiabilidad](reliability.md), llegando desde un dominio completamente distinto: **un indicador que mide lo que es fácil de medir en lugar de lo que te importa.** No vi el patrón hasta que me lo encontré en los dos sitios.
 
 ---
 
-## The scoreboard
+## Cuando el hardening rompió la monitorización
 
-Because the audit was a script, progress is a number rather than an assertion:
+Parte del endurecimiento del host activó el modo sigiloso del firewall, que deja de responder a ICMP.
 
-| Run | Controls | Passing | Failing |
+El monitor de uptime externo comprobaba el host por ping.
+
+El monitor reportó el servidor principal como caído de inmediato. Llevaba todo el rato en pie.
+
+El arreglo tentador es volver a desactivar el modo sigiloso, porque ahora el monitor se equivoca y el monitor molesta. El arreglo correcto es el otro: **cambiar el monitor a una comprobación TCP contra un puerto que de verdad esté sirviendo.** Un ping demuestra que una pila de red responde a ICMP. Una comprobación TCP demuestra que hay algo escuchando, que es más parecido a lo que "arriba" quería decir desde el principio.
+
+Merece la pena escribirlo porque el reflejo va en la dirección equivocada. Cuando un control de seguridad rompe un control operativo, el que suele estar midiendo mal es el segundo — pero es el que hace ruido, así que gana la discusión.
+
+---
+
+## El marcador
+
+Como la auditoría es un script, el progreso es un número y no una afirmación:
+
+| Ejecución | Controles | Pasan | Fallan |
 | --- | --- | --- | --- |
-| After phase one | 67 | 15 | 2 |
-| After the hardening sprints | 81 | 27 | **0** |
+| Tras la fase uno | 67 | 15 | 2 |
+| Tras los sprints de hardening | 81 | 27 | **0** |
 
-The control count grew because fixing things revealed things worth checking. That growth is the healthier of the two numbers: a static control set stops finding anything the moment you have satisfied it.
+El número de controles creció porque arreglar cosas revela cosas que merece la pena comprobar. Ese crecimiento es el más sano de los dos números: un conjunto de controles estático deja de encontrar nada en cuanto lo has satisfecho.
 
-Alongside the fixes, three capabilities were added that did not exist before: brute-force protection with a LAN allowlist, container image vulnerability scanning, and an external observer running on separate hardware so that the total failure of the main host is detectable at all.
-
----
-
-## What was deferred, and why
-
-Later phases of the plan are still in progress. They are the structural items — the ones that require changing how the network is laid out rather than changing a setting — and they were deliberately sequenced last, because each one risks breaking working services and none of them addresses a critical finding.
-
-That sequencing is the part I would defend in a review: **fix what is critical and cheap first, and accept the structural items as known and scheduled rather than pretending the plan is complete.** A remediation plan with everything marked done is usually a plan that was scoped to what was easy.
+Junto a los arreglos se añadieron tres capacidades que antes no existían: protección contra fuerza bruta con lista blanca de la LAN, escaneo de vulnerabilidades sobre las imágenes de contenedor, y un observador externo corriendo en hardware separado, de modo que el fallo total del host principal sea siquiera detectable.
 
 ---
 
-## The blind spot the audit had
+## Qué se aplazó, y por qué
 
-The audit covered system configuration, container posture, network exposure and service authentication. It did not cover **application-level secrets inside operational scripts**.
+Las fases posteriores del plan siguen en marcha. Son los ítems estructurales —los que exigen cambiar cómo está dispuesta la red y no cambiar un ajuste— y se secuenciaron los últimos a propósito, porque cada uno arriesga romper servicios que funcionan y ninguno resuelve un hallazgo crítico.
 
-Months later, instrumenting the monitoring, I found API credentials hardcoded in six Python scripts. They were never published anywhere and were moved to a runtime-loaded file outside version control, but the audit had run cleanly over a system that contained them, because that category was not in scope.
-
-This is not a flaw in the execution. It is what an audit is: a snapshot bounded by a scope, taken at a moment. Two things follow.
-
-**Scope is the whole ballgame.** Everything outside it is invisible, and the report will not say so.
-
-**Systems drift after you audit them.** The reason the script matters more than the report is that a script can run again. The report described April; the script can describe today.
-
-The weekly automated run is the item I most regret not having finished.
+Esa secuenciación es la parte que defendería en una revisión: **arregla primero lo crítico y barato, y acepta los ítems estructurales como conocidos y planificados en vez de fingir que el plan está completo.** Un plan de remediación con todo marcado como hecho suele ser un plan acotado a lo que era fácil.
 
 ---
 
-## What I would do differently
+## El punto ciego que tuvo la auditoría
 
-**Test behaviour before reading configuration.** The SSH issue would have surfaced in the first five minutes with one login attempt, instead of after a chain of increasingly clever config archaeology.
+La auditoría cubrió configuración del sistema, postura de los contenedores, exposición de red y autenticación de servicios. No cubrió **secretos a nivel de aplicación dentro de los scripts operativos**.
 
-**Write the checker before the checklist.** The document was the deliverable I was asked for. The script is the artefact that still has value a year later.
+Meses después, instrumentando la monitorización, encontré credenciales de API escritas a fuego en seis scripts de Python. Nunca se publicaron en ningún sitio y se movieron a un fichero cargado en tiempo de ejecución fuera del control de versiones, pero la auditoría había pasado limpia sobre un sistema que las contenía, porque esa categoría no estaba en el alcance.
 
-**Expect the audit to break something.** It did, immediately, and the recovery was more instructive than the fix. Budget for it rather than being surprised.
+No es un fallo de ejecución. Es lo que una auditoría es: una foto acotada por un alcance, tomada en un momento. De ahí se siguen dos cosas.
+
+**El alcance lo es todo.** Lo que queda fuera es invisible, y el informe no te lo va a advertir.
+
+**Los sistemas derivan después de auditarlos.** La razón por la que el script importa más que el informe es que un script se puede volver a ejecutar. El informe describía abril; el script puede describir hoy.
+
+La ejecución semanal automatizada es el ítem que más lamento no haber terminado.
+
+---
+
+## Qué haría distinto
+
+**Probar el comportamiento antes de leer la configuración.** Lo de SSH habría salido en los primeros cinco minutos con un intento de login, en vez de tras una cadena de arqueología de configuración cada vez más ingeniosa.
+
+**Escribir el comprobador antes que la checklist.** El documento era el entregable que pedí. El script es el artefacto que sigue teniendo valor un año después.
+
+**Contar con que la auditoría rompa algo.** Lo rompió, de inmediato, y la recuperación enseñó más que el arreglo. Presupuéstalo en vez de sorprenderte.

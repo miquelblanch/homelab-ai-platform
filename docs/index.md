@@ -1,65 +1,65 @@
 # Homelab AI Platform
 
-A self-hosted AI platform running on a single Mac Mini M4 Pro. It serves my household, but it is built and operated with the practices I would apply to a production system: instrumented, tested, documented, and honest about what it gets wrong.
+Una plataforma de IA autoalojada sobre un único Mac Mini M4 Pro. Da servicio a mi casa, pero está construida y operada con las prácticas que aplicaría a un sistema en producción: instrumentada, testeada, documentada y honesta sobre lo que hace mal.
 
-**41 containers. One agent. 1,991 documents indexed. Zero cloud dependencies for anything that matters.**
-
----
-
-## What it does
-
-**A conversational agent over Telegram.** Routes each request to a local `qwen3.5-9b` or a cloud model depending on complexity, runs scheduled jobs, queries the knowledge base, and operates the infrastructure — with human approval required before it touches anything critical.
-
-**A hybrid-search RAG** over 1,991 documents and 10,762 chunks. Vector search (HNSW) fused with lexical search (BM25) through reciprocal rank fusion. Embeddings run locally on `nomic-embed-text`.
-
-**Self-healing infrastructure.** Every five minutes, 41 containers and 3 disks are checked. Non-critical containers are restarted automatically and the restart is *verified*; critical ones are escalated to a human. A circuit breaker stops the loop when a container starts flapping.
-
-**Backups that are checked, not assumed.** Nightly snapshot plus nine database dumps, followed by thirteen integrity checks the next morning. The report arrives whether it passed or failed.
+**41 contenedores. Un agente. 1.991 documentos indexados. Cero dependencias cloud para lo que importa.**
 
 ---
 
-## Why this exists as a case study
+## Qué hace
 
-Most homelab write-ups are inventories: a list of containers and a screenshot of a dashboard. This one is about the part that is harder and more transferable — **finding out that your monitoring is lying to you**.
+**Un agente conversacional sobre Telegram.** Enruta cada petición a un `qwen3.5-9b` local o a un modelo cloud según la complejidad, ejecuta tareas programadas, consulta la base de conocimiento y opera la infraestructura — con aprobación humana obligatoria antes de tocar nada crítico.
 
-While instrumenting the metrics pipeline, three separate indicators that had been green for months turned out to measure something other than what their labels claimed:
+**Un RAG de búsqueda híbrida** sobre 1.991 documentos y 10.762 chunks. Búsqueda vectorial (HNSW) fusionada con búsqueda léxica (BM25) mediante reciprocal rank fusion. Los embeddings corren en local sobre `nomic-embed-text`.
 
-| Indicator | What it appeared to say | What it actually measured |
+**Infraestructura que se auto-repara.** Cada cinco minutos se revisan 41 contenedores y 3 discos. Los no críticos se reinician automáticamente y el reinicio **se verifica**; los críticos se escalan a un humano. Un cortacircuitos detiene el bucle cuando un contenedor empieza a caerse en cadena.
+
+**Backups que se comprueban, no que se suponen.** Snapshot nocturno más nueve volcados de base de datos, seguidos de trece verificaciones de integridad a la mañana siguiente. El informe llega tanto si pasa como si falla.
+
+---
+
+## Por qué esto es un caso de estudio
+
+Casi todo lo que se escribe sobre homelabs es un inventario: una lista de contenedores y la captura de un panel. Esto va de la parte difícil y transferible — **descubrir que tu monitorización te está mintiendo**.
+
+Instrumentando el pipeline de métricas, tres indicadores que llevaban meses en verde resultaron medir algo distinto de lo que prometía su etiqueta:
+
+| Indicador | Lo que parecía decir | Lo que medía en realidad |
 | --- | --- | --- |
-| Auto-remediation: 100% success | restarts fix the problem | `docker restart` returned exit code 0 |
-| Container health ratio | share of healthy containers | everything not explicitly broken |
-| Relays 5/5 | all nine relays are up | five checks pass, three of them unrelated |
+| Auto-remediación: 100% de éxito | los reinicios arreglan el problema | que `docker restart` devolvió 0 |
+| Ratio de salud de contenedores | proporción de contenedores sanos | todo lo que no estaba roto explícitamente |
+| Relays 5/5 | los nueve relays funcionan | cinco comprobaciones pasan, tres sin relación |
 
-None of them was broken. Each measured something real. None measured what it promised.
+Ninguno estaba roto. Cada uno medía algo real. Ninguno medía lo que prometía.
 
-That is the thread running through this documentation: the difference between a system that reports green and a system that is actually working, and the engineering it takes to close the gap.
+Ese es el hilo que recorre toda esta documentación: la diferencia entre un sistema que reporta verde y un sistema que de verdad funciona, y la ingeniería que hace falta para cerrar esa distancia.
 
 ---
 
-## Where to start
+## Por dónde empezar
 
 <div class="grid cards" markdown>
 
-- **[Architecture](architecture.md)**
+- **[Arquitectura](architecture.md)**
 
-    How the pieces fit: the agent runtime, the RAG engine, the monitoring layer, and why the container network needs relays to reach physical devices.
+    Cómo encajan las piezas: el runtime del agente, el motor de RAG, la capa de monitorización, y por qué la red de contenedores necesita relays para alcanzar dispositivos físicos.
 
-- **[Reliability](case-studies/reliability.md)**
+- **[Fiabilidad](case-studies/reliability.md)**
 
-    Metrics persistence, verified remediation, circuit breakers, retention with downsampling, and heartbeats for scheduled work.
+    Persistencia de métricas, remediación verificada, cortacircuitos, retención con agregación, y latidos para las tareas programadas.
 
-- **[Security review](case-studies/security.md)**
+- **[Auditoría de seguridad](case-studies/security.md)**
 
-    An active audit of the whole platform: 37 findings, eleven of them critical, and a control that reported the opposite of what was actually happening.
+    Una auditoría activa de toda la plataforma: 37 hallazgos, once de ellos críticos, y un control que reportaba justo lo contrario de lo que estaba pasando.
 
 </div>
 
-If you only read one page, read **[Decisions and mistakes](decisions.md)**. It is the shortest and the only one where things go wrong.
+Si solo vas a leer una página, lee **[Decisiones y errores](decisions.md)**. Es la más corta y la única donde las cosas salen mal.
 
 ---
 
-## Constraints worth knowing
+## Restricciones que conviene conocer
 
-This is a single-node system with no redundancy, running in a flat home network on consumer hardware. It is designed for a household, not a company. Several choices that look unusual — relays for LAN access, a local model for scheduled jobs, SQLite instead of a time-series database — follow directly from those constraints, and each is argued where it appears.
+Esto es un sistema de un solo nodo, sin redundancia, sobre hardware de consumo y en una red doméstica plana. Está diseñado para una casa, no para una empresa. Varias decisiones que parecen raras —relays para alcanzar la LAN, un modelo local para las tareas programadas, SQLite en lugar de una base de datos de series temporales— salen directamente de esas restricciones, y cada una se argumenta donde aparece.
 
-Addresses, domains and hostnames throughout this documentation are illustrative.
+Las direcciones, dominios y nombres de host que aparecen en esta documentación son ilustrativos.

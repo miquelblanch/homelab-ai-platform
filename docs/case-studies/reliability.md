@@ -1,37 +1,37 @@
-# Reliability
+# Fiabilidad
 
-> The gap between a system that reports green and a system that is working.
+> La distancia entre un sistema que reporta verde y un sistema que funciona.
 
-This page is the long version of the table on the front page. Three indicators had been green for months. None of them was broken. None of them measured what its label promised.
+Esta página es la versión larga de la tabla de la portada. Tres indicadores llevaban meses en verde. Ninguno estaba roto. Ninguno medía lo que su etiqueta prometía.
 
-I found all three in a single afternoon, and only because I set out to do something unrelated: start recording metrics so I would have numbers to write about.
+Los encontré los tres en una sola tarde, y solo porque me había puesto a hacer otra cosa: empezar a registrar métricas para tener números que contar.
 
 ---
 
-## The starting point
+## El punto de partida
 
-The monitoring worked. Every five minutes a script checked 41 containers and 3 disks, restarted the non-critical ones that had fallen over, escalated the critical ones to Telegram, and moved on. It had been doing that reliably for months.
+La monitorización funcionaba. Cada cinco minutos un script revisaba 41 contenedores y 3 discos, reiniciaba los no críticos que se habían caído, escalaba los críticos a Telegram y seguía. Llevaba meses haciéndolo sin fallar.
 
-It also **threw everything away**. The alert went to Telegram and nothing was persisted. There had been a metrics database once, written by a component that was later dismantled; the table was still there, holding 265,365 rows, with nothing written to it for 70 days.
+También **lo tiraba todo**. La alerta iba a Telegram y no se guardaba nada. Hubo una base de datos de métricas en su momento, escrita por un componente que después se desmanteló; la tabla seguía ahí, con 265.365 filas y sin una sola escritura en 70 días.
 
-So the first task looked simple: give the monitor that already worked a memory.
+Así que la primera tarea parecía simple: darle memoria al monitor que ya funcionaba.
 
 ```
 grep -r "container_metrics" .
-# (no results)
+# (sin resultados)
 ```
 
-The writer did not exist. It had never been broken — it had been deleted along with the component that owned it, and nobody noticed because nothing depended on the data.
+El escritor no existía. Nunca se había roto — lo borraron junto con el componente que lo mantenía, y nadie se enteró porque nada dependía de esos datos.
 
-That is the first lesson of the day, and the cheapest one: **data nobody reads stops being produced and nobody finds out.**
+Esa es la primera lección del día, y la más barata: **los datos que nadie lee dejan de producirse y nadie se entera.**
 
 ---
 
-## Finding 1 — a 100% success rate that measured exit codes
+## Hallazgo 1 — un 100% de éxito que medía códigos de salida
 
-With metrics recording again, the historical remediation table became worth looking at. Two tables, actually — the schema had changed months earlier and the history was split. After consolidating them: **83 real remediation events** between March and May.
+Con las métricas registrándose otra vez, la tabla histórica de remediación pasó a merecer una mirada. Dos tablas, en realidad: el esquema había cambiado meses antes y el histórico estaba partido. Tras consolidarlas: **83 eventos reales de remediación** entre marzo y mayo.
 
-The distribution was not subtle.
+La distribución no era sutil.
 
 ```sql
 SELECT container_name, COUNT(*) FROM restart_history
@@ -46,9 +46,9 @@ homelab-dashboard    5
 audiobookshelf       2
 ```
 
-**One container accounted for 59% of every automated intervention in the system.** Forty-nine restarts in seven weeks, and not a single alert had ever reached me — because the healer worked. Every restart was recorded as `success`, so nothing ever escalated.
+**Un solo contenedor acumulaba el 59% de todas las intervenciones automáticas del sistema.** Cuarenta y nueve reinicios en siete semanas, y jamás me llegó una alerta — porque el healer funcionaba. Cada reinicio se registraba como `success`, así que nunca escalaba nada.
 
-### It was not flapping. It was six episodes.
+### No era flapeo. Eran seis episodios.
 
 ```
 2026-04-01  ██████ 6
@@ -59,186 +59,186 @@ audiobookshelf       2
 2026-05-05  ███ 3
 ```
 
-Inside each episode the timestamps cluster tightly — 44 of 48 intervals under one hour, median 12 minutes:
+Dentro de cada episodio las marcas de tiempo se agrupan muy juntas — 44 de 48 intervalos por debajo de una hora, mediana de 12 minutos:
 
 ```
-05:50:26   05:55:22   06:02:38      ← three consecutive 5-minute cycles
-06:55:23   07:00:09   07:05:12      ← three more, one hour later
+05:50:26   05:55:22   06:02:38      ← tres ciclos consecutivos de 5 minutos
+06:55:23   07:00:09   07:05:12      ← otros tres, una hora después
 07:55:25
 ```
 
-That is not a container degrading. That is something knocking it over, and a healer restarting it on every cycle.
+Eso no es un contenedor degradándose. Es algo que lo tumba, y un healer reiniciándolo en cada ciclo.
 
-Resource exhaustion was the obvious hypothesis and the data killed it: mean memory 23 MB, peak 42 MB, mean CPU 0.05%. Nothing was starving.
+El agotamiento de recursos era la hipótesis obvia, y los datos la mataron: memoria media 23 MB, pico 42 MB, CPU media 0,05%. Nada pasaba hambre.
 
-### The evidence that mattered
+### La evidencia que importaba
 
-The hourly aggregates for 18 April:
+Los agregados horarios del 18 de abril:
 
 ```
-2026-04-18T05   12 samples   cpu 0.01   mem  17.7 MB
-2026-04-18T06   12 samples   cpu 0.00   mem   0.0 MB   ← entire hour at zero
-2026-04-18T07   12 samples   cpu 0.00   mem   0.0 MB   ← entire hour at zero
-2026-04-18T08   12 samples   cpu 0.01   mem  23.8 MB
+2026-04-18T05   12 muestras   cpu 0.01   mem  17.7 MB
+2026-04-18T06   12 muestras   cpu 0.00   mem   0.0 MB   ← hora entera a cero
+2026-04-18T07   12 muestras   cpu 0.00   mem   0.0 MB   ← hora entera a cero
+2026-04-18T08   12 muestras   cpu 0.01   mem  23.8 MB
 ```
 
-For two full hours, all twelve samples per hour show zero memory and zero CPU. The container was listed but not running.
+Durante dos horas completas, las doce muestras de cada hora dan cero memoria y cero CPU. El contenedor estaba listado pero no ejecutándose.
 
-During those same two hours the healer logged **four restarts, all four as `success`**.
+En esas mismas dos horas el healer registró **cuatro reinicios, los cuatro como `success`**.
 
-The explanation is one line of code. The old healer recorded success when `docker restart` returned exit code 0 — which it does whenever the daemon accepts the command, regardless of whether the container then stays up. **The metric measured the exit code, not the outcome.**
+La explicación cabe en una línea de código. El healer antiguo registraba éxito cuando `docker restart` devolvía 0 — cosa que ocurre siempre que el daemon acepta el comando, independientemente de que el contenedor se mantenga luego en pie. **La métrica medía el código de salida, no el resultado.**
 
-A 100% success rate over 83 events is exactly the kind of number that ends up on a slide. It was measuring nothing.
+Un 100% de éxito sobre 83 eventos es exactamente el número que acaba en una diapositiva. No estaba midiendo nada.
 
-### The fix: verify, then record
+### El arreglo: verificar y luego registrar
 
 ```python
 def restart_container(name: str, reason: str = "") -> bool:
-    """Restart and **verify**. Returns True only if the container is
-    actually running afterwards."""
+    """Reinicia y **verifica**. Devuelve True solo si el contenedor
+    está realmente corriendo después."""
     try:
         subprocess.check_call(["docker", "restart", name], timeout=30)
     except Exception as e:
-        metrics_db.record_restart(name, "failed", f"{reason} | command: {e}")
+        metrics_db.record_restart(name, "failed", f"{reason} | comando: {e}")
         return False
 
-    sleep(VERIFY_DELAY_S)                      # 10 seconds
-    running = container_is_running(name)       # docker inspect, not exit code
+    sleep(VERIFY_DELAY_S)                      # 10 segundos
+    running = container_is_running(name)       # docker inspect, no el código de salida
 
     if running:
-        metrics_db.record_restart(name, "success", f"{reason} | verified")
+        metrics_db.record_restart(name, "success", f"{reason} | verificado")
     else:
         metrics_db.record_restart(
             name, "failed",
-            f"{reason} | command returned 0 but not running after {VERIFY_DELAY_S}s")
+            f"{reason} | devolvió 0 pero no está running tras {VERIFY_DELAY_S}s")
     return running
 ```
 
-`success` now means *observed running ten seconds later*. It is still not a guarantee — a container can come up and die a minute afterwards — but it is a claim about the system instead of a claim about a subprocess.
+`success` significa ahora *observado corriendo diez segundos después*. Sigue sin ser una garantía —un contenedor puede levantarse y morir un minuto más tarde— pero es una afirmación sobre el sistema en vez de una afirmación sobre un subproceso.
 
-### The fix: a circuit breaker
+### El arreglo: un cortacircuitos
 
-Verification tells you a restart failed. It does not stop you from doing it forty-nine times.
+La verificación te dice que un reinicio falló. No te impide hacerlo cuarenta y nueve veces.
 
 ```python
 def breaker_decision(attempts: int, max_attempts: int = CB_MAX_ATTEMPTS):
-    """Pure function, so it can be tested without Docker."""
+    """Función pura, para poder testearla sin Docker."""
     if attempts >= max_attempts:
-        return False, (f"circuit breaker open: {attempts} attempts in the last "
-                       f"{CB_WINDOW_HOURS}h (max {max_attempts})")
-    return True, f"attempt {attempts + 1}/{max_attempts} in {CB_WINDOW_HOURS}h"
+        return False, (f"cortacircuitos abierto: {attempts} intentos en las últimas "
+                       f"{CB_WINDOW_HOURS} h (máximo {max_attempts})")
+    return True, f"intento {attempts + 1}/{max_attempts} en {CB_WINDOW_HOURS} h"
 ```
 
-Three attempts in six hours and the monitor stops restarting, records the event as `circuit_breaker`, and sends a *different* alert — one that includes the container's last log lines.
+Tres intentos en seis horas y el monitor deja de reiniciar, registra el evento como `circuit_breaker` y manda una alerta *distinta* — una que incluye las últimas líneas de log del contenedor.
 
-Two decisions inside it are worth stating:
+Dos decisiones internas merecen enunciarse:
 
-**The attempt count excludes `circuit_breaker` and `skipped` events.** Counting them would let the breaker feed itself and never close.
+**El recuento de intentos excluye los eventos `circuit_breaker` y `skipped`.** Contarlos dejaría que el cortacircuitos se alimentase a sí mismo y no se abriera nunca.
 
-**If the database read fails, the count is zero.** When in doubt, attempt the restart. A storage problem must not silently disable remediation.
+**Si falla la lectura de la base de datos, el recuento es cero.** Ante la duda, intentar el reinicio. Un problema de almacenamiento no puede desactivar la remediación en silencio.
 
-Calibrated against the real episode, the thresholds cut it here:
+Calibrado contra el episodio real, los umbrales lo cortan aquí:
 
 ```
-05:50:26  attempt 1/3   →  restart
-05:55:22  attempt 2/3   →  restart
-06:02:38  attempt 3/3   →  restart
-06:55:23  BLOCKED       →  alert with container logs
+05:50:26  intento 1/3   →  reinicia
+05:55:22  intento 2/3   →  reinicia
+06:02:38  intento 3/3   →  reinicia
+06:55:23  BLOQUEADO     →  alerta con los logs del contenedor
 ```
 
-I would have known at 06:55 on 18 April, instead of three months later while reading a database.
+Me habría enterado a las 06:55 del 18 de abril, en vez de tres meses después leyendo una base de datos.
 
-!!! warning "The root cause is still unknown"
-    `beszel` has been stable since 5 May. This work detects and contains the failure class; it does not diagnose that particular container. If it recurs, the logs now arrive on my phone — which is what was missing.
+!!! warning "La causa raíz sigue sin conocerse"
+    `beszel` lleva estable desde el 5 de mayo. Este trabajo detecta y contiene la clase de fallo; no diagnostica ese contenedor en concreto. Si vuelve a pasar, los logs llegan al móvil — que es justo lo que faltaba.
 
 ---
 
-## Finding 2 — `healthy` did not mean healthy
+## Hallazgo 2 — `healthy` no significaba sano
 
-The new writer recorded `health='healthy'` for any container not explicitly reporting `unhealthy`. The old writer had recorded Docker's actual health field, which is **empty** when a container defines no `HEALTHCHECK`.
+El escritor nuevo registraba `health='healthy'` para cualquier contenedor que no reportase `unhealthy` explícitamente. El escritor antiguo guardaba el campo real de Docker, que está **vacío** cuando el contenedor no define ningún `HEALTHCHECK`.
 
-Empty and healthy are not the same thing. A container without a health check is not healthy; it is unchecked.
+Vacío y sano no son lo mismo. Un contenedor sin healthcheck no está sano: está sin comprobar.
 
-The consequence was a step change in the time series on the day I introduced it — an artefact of my own code, not of the system. Since `status` was stored verbatim, the correct value could be derived retroactively:
+La consecuencia fue un escalón en la serie temporal el día que lo introduje — un artefacto de mi propio código, no del sistema. Como el `status` se guardaba íntegro, el valor correcto se podía derivar retroactivamente:
 
-| Docker status | `health` |
+| Estado de Docker | `health` |
 | --- | --- |
 | `Up 2 weeks (healthy)` | `healthy` |
 | `Up 3 hours (unhealthy)` | `unhealthy` |
 | `Up 5 seconds (health: starting)` | `starting` |
-| `Up 10 hours` | `` — no health check defined |
+| `Up 10 hours` | `` — sin healthcheck definido |
 
-**491 of 779 rows were wrong: 63%.**
+**491 de 779 filas estaban mal: el 63%.**
 
-The migration imports the parsing function from the monitor rather than reimplementing it, so the rule cannot drift between the two.
+La migración importa la función de parseo del monitor en lugar de reimplementarla, para que la regla no pueda divergir entre las dos.
 
-What makes this fix trustworthy is not that it ran — it is that the proportions line up across the boundary:
+Lo que hace fiable el arreglo no es que se ejecutara, sino que las proporciones cuadran a ambos lados de la frontera:
 
 ```
-historical (Apr–May):     8,446 / 22,556 hours with a health check  =  37.4%
-today, after the fix:       288 /    779 rows                       =  37.0%
+histórico (abr-may):     8.446 / 22.556 horas con healthcheck  =  37,4%
+hoy, tras el arreglo:      288 /    779 filas                  =  37,0%
 ```
 
-Two independently produced datasets agreeing to within half a percentage point. Without that check I would have had a migration that ran cleanly and produced plausible garbage.
+Dos conjuntos de datos producidos de forma independiente coincidiendo en medio punto porcentual. Sin esa comprobación tendría una migración que corrió limpia y produjo basura plausible.
 
 ---
 
-## Finding 3 — "Relays 5/5"
+## Hallazgo 3 — "Relays 5/5"
 
-The daily report contained a line reading `Relays: 5/5`. There are nine relays. The five being counted were not a subset of the nine — three of them were reverse-proxy relays, unrelated to the hardware integrations.
+El informe diario contenía una línea que decía `Relays: 5/5`. Hay nueve relays. Y los cinco que contaba no eran un subconjunto de los nueve: tres de ellos eran relays del proxy inverso, sin relación con las integraciones de hardware.
 
-Actual coverage, once audited:
+Cobertura real, una vez auditada:
 
-| Relay | Coverage |
+| Relay | Cobertura |
 | --- | --- |
-| Zigbee, two microcontroller bridges | Indirect — a separate monitor verifies the *effect* through the Home Assistant API |
-| Two device relays | Direct |
-| **Four remaining relays** | **None** |
+| Zigbee y dos puentes de microcontrolador | Indirecta — otro monitor verifica el *efecto* a través de la API de Home Assistant |
+| Dos relays de dispositivo | Directa |
+| **Los cuatro restantes** | **Ninguna** |
 
-The indirect coverage is arguably better than checking the relay: it verifies that the integration works, not that a process exists. But four relays had no coverage of any kind, and the line in the report read as reassurance.
+La cobertura indirecta es discutiblemente mejor que comprobar el relay: verifica que la integración funciona, no que exista un proceso. Pero cuatro relays no tenían cobertura de ningún tipo, y la línea del informe se leía como una garantía.
 
-The denominator was "things we happen to check", presented as "things that matter".
+El denominador era "las cosas que resulta que miramos", presentado como "las cosas que importan".
 
 ---
 
-## The pipeline underneath
+## El pipeline que hay debajo
 
-### Fail-safe by contract
+### A prueba de fallos por contrato
 
-Every function in the persistence layer catches its own exceptions and returns a neutral value. A monitor that runs every five minutes must not die because a disk write failed.
+Todas las funciones de la capa de persistencia capturan sus propias excepciones y devuelven un valor neutro. Un monitor que corre cada cinco minutos no puede morirse porque falle una escritura a disco.
 
 ```python
 def record_containers(rows: list[dict], timestamp: str | None = None) -> int:
     ...
     except Exception as e:
-        _log(f"record_containers failed: {e}")
+        _log(f"record_containers falló: {e}")
         return 0
 ```
 
-This is a deliberate inversion of normal practice. In application code, swallowing exceptions hides bugs. In a monitor, an unhandled exception means **you stop finding out about everything else**, which is strictly worse than losing one sample.
+Es una inversión deliberada de la buena práctica. En código de aplicación, tragarse las excepciones esconde bugs. En un monitor, una excepción no capturada significa **dejar de enterarte de todo lo demás**, que es estrictamente peor que perder una muestra.
 
-### Retention that does not destroy the series
+### Retención que no destruye la serie
 
-At 41 containers every five minutes, this produces roughly 11,000 rows a day — about 900 MB a year.
+A 41 contenedores cada cinco minutos, esto produce unas 11.000 filas al día — cerca de 900 MB al año.
 
-The naive fix, deleting old rows, would have erased the April–May history the same morning it was recovered. So the policy aggregates before it deletes:
+El arreglo ingenuo, borrar lo viejo, habría destruido el histórico de abril y mayo la misma mañana en que se recuperó. Así que la política agrega antes de borrar:
 
-- Full resolution kept for 30 days
-- Older data collapsed into hourly averages per container and daily averages per disk
-- Aggregates kept indefinitely
+- Resolución completa durante 30 días
+- Lo anterior se colapsa en medias horarias por contenedor y diarias por disco
+- Los agregados se guardan indefinidamente
 
-Two properties make it safe.
+Dos propiedades lo hacen seguro.
 
-**The cutoff is truncated to the hour.** Aggregation and deletion use the identical boundary, so an hour is either wholly aggregated or wholly untouched. Nothing is ever deleted half-summarised.
+**El corte se trunca a la hora.** Agregación y borrado usan exactamente la misma frontera, así que una hora entra completa en el agregado o no entra. Nunca se borra detalle a medio resumir.
 
 ```python
 def _cutoff_hour(keep_days: int) -> str:
-    """Truncating is what makes the policy safe: rollup and prune use exactly
-    the same boundary, so an hour goes into the aggregate whole or not at all."""
+    """Truncar es lo que hace segura la política: rollup y prune usan
+    exactamente el mismo corte, así que una hora entra entera o no entra."""
     return datetime.fromtimestamp(time() - keep_days * 86400).strftime("%Y-%m-%dT%H")
 ```
 
-**Deletion only touches what has already been aggregated.**
+**El borrado solo toca lo que ya está agregado.**
 
 ```sql
 DELETE FROM container_metrics
@@ -246,87 +246,87 @@ WHERE substr(timestamp, 1, 13) < ?
   AND substr(timestamp, 1, 13) IN (SELECT hour FROM container_metrics_hourly)
 ```
 
-If the rollup fails, the prune deletes nothing. The safety net is in the query, not in the caller.
+Si la agregación falla, la purga no borra nada. La red de seguridad está en la consulta, no en el llamante.
 
-First run:
+Primera pasada:
 
 ```
-265,365 detail rows  →  22,556 hourly rows
-74.6 MB              →  2.9 MB
-Apr–May series       →  intact, at hourly resolution
+265.365 filas de detalle  →  22.556 filas horarias
+74,6 MB                   →  2,9 MB
+serie abril-mayo          →  intacta, a resolución horaria
 ```
 
-A 96% reduction with the shape of the series preserved.
+Un 96% de reducción conservando la forma de la serie.
 
 ---
 
-## Heartbeats, and why discovery-based monitoring is blind
+## Latidos, y por qué la monitorización por descubrimiento es ciega
 
-The scheduled-job monitor works by **discovery**: it lists the loaded jobs and reports on those. It answers "is this job loaded and did its last run succeed?"
+El monitor de tareas programadas funciona **por descubrimiento**: lista las tareas cargadas e informa sobre ellas. Responde a "¿está esta tarea cargada y su última ejecución fue bien?".
 
-It cannot answer "is a job missing?" If a job is never loaded, or gets unloaded, or fails to register after a reboot, it drops out of the count and the report goes from `21/21` to `20/20`. Still green. For a weekly job, that can go unnoticed for a month.
+No puede responder a "¿falta alguna tarea?". Si una nunca se carga, o se descarga, o falla al registrarse tras un reinicio, desaparece del recuento y el informe pasa de `21/21` a `20/20`. Sigue en verde. Para una tarea semanal, eso puede pasar desapercibido un mes.
 
-Heartbeats invert the question. Each job writes a record when it finishes; a manifest declares which jobs are expected and how stale each is allowed to be. The daily report compares.
+Los latidos invierten la pregunta. Cada tarea escribe un registro al terminar; un manifiesto declara qué tareas se esperan y cuánta antigüedad se tolera en cada una. El informe diario compara.
 
-This duplicates what a push monitor in Uptime Kuma already does, and rather than pick one, the heartbeat writes locally **and** pushes to Kuma. They fail differently:
+Esto duplica lo que ya hace un monitor de tipo push en Uptime Kuma y, en vez de elegir uno, el latido escribe en local **y** hace push a Kuma. Fallan de forma distinta:
 
-| | Uptime Kuma push | Local heartbeat |
+| | Push a Uptime Kuma | Latido local |
 | --- | --- | --- |
-| Immediate alerting | yes | no — next daily report |
-| History and graphs | yes | no |
-| External observer | **yes, separate host** | no |
-| Works with network or DNS down | no | yes |
-| Failure detail | truncated | full JSON |
+| Alerta inmediata | sí | no — hasta el informe diario |
+| Historial y gráficas | sí | no |
+| Observador externo | **sí, otra máquina** | no |
+| Funciona sin red ni DNS | no | sí |
+| Detalle del fallo | truncado | JSON completo |
 
-Kuma runs on a different machine, which is the only way to detect that this machine is dead. The local file is the only thing that survives Kuma being dead. Neither subsumes the other.
+Kuma corre en otra máquina, que es la única forma de detectar que esta máquina está muerta. El fichero local es lo único que sobrevive a que Kuma esté muerto. Ninguno sustituye al otro.
 
-Three design notes, each of which came from getting it wrong first:
+Tres notas de diseño, cada una fruto de haberlo hecho mal primero:
 
-**Kuma is addressed by IP, not hostname.** The heartbeat must not depend on internal DNS, which is itself one of the monitored services.
+**Kuma se direcciona por IP, no por nombre.** El latido no puede depender del DNS interno, que es a su vez uno de los servicios monitorizados.
 
-**A failed push does not invalidate the heartbeat.** The write returns the status of the local file only; the daily report depends on the file, not the network.
+**Un push fallido no invalida el latido.** La escritura devuelve el estado del fichero local únicamente; el informe diario depende del fichero, no de la red.
 
-**The manifest self-heals.** The first version returned the config file as-is, so an existing manifest silently ignored options added later — which is exactly what happened to the `push` flag the day it was introduced. The push looked configured, both verification commands reported success, and nothing was being sent. It now merges defaults into missing keys and rewrites the file.
+**El manifiesto se autocompleta.** La primera versión devolvía el fichero de configuración tal cual, así que un manifiesto ya existente ignoraba en silencio las opciones añadidas después — que es exactamente lo que le pasó a la opción de push el día que se introdujo. El push parecía configurado, los dos comandos de verificación daban éxito, y no se enviaba nada. Ahora fusiona los valores por defecto en las claves ausentes y reescribe el fichero.
 
-That last one is finding number four, found the same way as the others: a word missing from a line of output.
+Ese es el hallazgo número cuatro, encontrado igual que los otros: por una palabra que faltaba en una línea de salida.
 
 ---
 
 ## Tests
 
-86 assertions across three modules, none of which require Docker, a network, or the real database.
+86 aserciones en tres módulos, ninguna de las cuales necesita Docker, red, ni la base de datos real.
 
-| Suite | Covers |
+| Suite | Cubre |
 | --- | --- |
-| `metrics_db` | writes, aggregation, retention, the safety net, never raising |
-| `docker_monitor` | status parsing, stats parsing, health derivation, breaker decision |
-| `heartbeat` | manifest merging, staleness, push failure, corrupt config |
+| `metrics_db` | escrituras, agregación, retención, la red de seguridad, no lanzar nunca |
+| `docker_monitor` | parseo de estado, parseo de stats, derivación de health, decisión del cortacircuitos |
+| `heartbeat` | fusión del manifiesto, latidos rancios, fallo de push, configuración corrupta |
 
-The parsing functions were extracted from the monitor specifically so they could be tested against degenerate input — `--`, `n/a`, missing columns, `unhealthy` containing `healthy` as a substring, CPU above 100%.
+Las funciones de parseo se extrajeron del monitor precisamente para poder probarlas contra entradas degeneradas: `--`, `n/a`, columnas ausentes, `unhealthy` conteniendo `healthy` como subcadena, CPU por encima del 100%.
 
-The regression tests that matter most are the ones written after each mistake above. There is a test asserting that a manifest from an older version inherits new keys, and one asserting that a failed push still writes the local heartbeat.
-
----
-
-## What this actually cost, and what is still open
-
-The whole thing was one afternoon, and most of it was not writing code. It was reading data that had been sitting there for months.
-
-Still open:
-
-- The root cause of the container that consumed 59% of all remediations
-- Four relays with no monitoring coverage
-- Heartbeats cover one job; the rest of the scheduled work still relies on discovery
-- No consistency check on the metrics series itself. All four findings were caught by eye
-
-That last one is the uncomfortable one. **Every problem on this page was found by a human noticing something odd, not by a system designed to notice.** Building the check that would have caught them is the obvious next step, and it is not done.
+Los tests de regresión que más valen son los que se escribieron después de cada error de arriba. Hay uno que afirma que un manifiesto de una versión anterior hereda las claves nuevas, y otro que afirma que un push fallido sigue escribiendo el latido local.
 
 ---
 
-## Three things I would tell myself in March
+## Lo que costó de verdad, y lo que sigue abierto
 
-**Investigate before you compress.** The five-minute detail for April was aggregated in the morning; the analysis of the 49 restarts happened that afternoon. The hourly averages were enough to conclude, but the minute-by-minute sequence is gone for good.
+Todo esto fue una tarde, y la mayor parte no fue escribir código. Fue leer datos que llevaban meses ahí.
 
-**A green metric is not a correct metric.** All three indicators had been in the daily report for months. None was broken. Each measured something real. None measured what its label promised.
+Sigue abierto:
 
-**Discovery-based monitoring cannot see absences.** It is convenient because there is no list to maintain, and that convenience is exactly what turns a component disappearing into silence.
+- La causa raíz del contenedor que consumió el 59% de las remediaciones
+- Cuatro relays sin cobertura de monitorización
+- Los latidos cubren una tarea; el resto del trabajo programado sigue dependiendo del descubrimiento
+- No hay ninguna comprobación de consistencia sobre la propia serie de métricas. Los cuatro hallazgos se detectaron a ojo
+
+Ese último es el incómodo. **Todos los problemas de esta página los encontró una persona notando algo raro, no un sistema diseñado para notarlo.** Construir esa comprobación es el siguiente paso obvio, y no está hecho.
+
+---
+
+## Tres cosas que le diría a mi yo de marzo
+
+**Investiga antes de comprimir.** El detalle a cinco minutos de abril se agregó por la mañana; el análisis de los 49 reinicios se hizo esa tarde. Las medias horarias bastaron para concluir, pero la secuencia minuto a minuto se perdió para siempre.
+
+**Un dato en verde no es un dato correcto.** Los tres indicadores llevaban meses en el informe diario. Ninguno estaba roto. Cada uno medía algo real. Ninguno medía lo que su etiqueta prometía.
+
+**La monitorización por descubrimiento no ve las ausencias.** Es cómoda porque no hay lista que mantener, y esa comodidad es justo lo que convierte la desaparición de un componente en silencio.

@@ -1,13 +1,13 @@
 site_name: Homelab AI Platform
 site_description: >-
-  A self-hosted AI platform running on a single Mac Mini: a Telegram agent with
-  cost-aware model routing, a hybrid-search RAG over 1,991 documents, and 41
-  containers with instrumented auto-remediation.
+  Una plataforma de IA autoalojada en un solo Mac Mini: un agente de Telegram
+  con enrutado de modelos por coste, un RAG de búsqueda híbrida sobre 1.991
+  documentos y 41 contenedores con auto-remediación instrumentada.
 site_author: Miquel Blanch
 
 theme:
   name: material
-  language: en
+  language: es
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -15,14 +15,14 @@ theme:
       accent: teal
       toggle:
         icon: material/weather-night
-        name: Switch to dark mode
+        name: Cambiar a modo oscuro
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: teal
       accent: teal
       toggle:
         icon: material/weather-sunny
-        name: Switch to light mode
+        name: Cambiar a modo claro
   features:
     - navigation.sections
     - navigation.top
@@ -34,12 +34,12 @@ theme:
     repo: fontawesome/brands/github
 
 nav:
-  - Overview: index.md
-  - Architecture: architecture.md
-  - Case studies:
-      - Reliability: case-studies/reliability.md
-      - Security review: case-studies/security.md
-  - Decisions and mistakes: decisions.md
+  - Visión general: index.md
+  - Arquitectura: architecture.md
+  - Casos de estudio:
+      - Fiabilidad: case-studies/reliability.md
+      - Auditoría de seguridad: case-studies/security.md
+  - Decisiones y errores: decisions.md
 
 # Páginas aún sin escribir: se excluyen del build para que no queden
 # accesibles por URL. Quitar de aquí cuando tengan contenido.
@@ -72,5 +72,5 @@ extra:
   generator: false
 
 copyright: >-
-  Written by Miquel Blanch. Network addresses, domains and credentials
-  in this documentation are illustrative.
+  Escrito por Miquel Blanch. Las direcciones de red, dominios y credenciales
+  que aparecen en esta documentación son ilustrativos.

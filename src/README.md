@@ -1,60 +1,62 @@
-# Operational code
+# Código operativo
 
-A sanitized snapshot of the code discussed in [Reliability](../docs/case-studies/reliability.md). It is the real thing, not a demo — the same modules that run every five minutes on the host — with absolute paths replaced by environment variables and defaults that resolve inside this repository.
+Una copia saneada del código que se comenta en [Fiabilidad](../docs/case-studies/reliability.md). Es el real, no una demo — los mismos módulos que corren cada cinco minutos en el host — con las rutas absolutas sustituidas por variables de entorno y valores por defecto que resuelven dentro de este repositorio.
 
-**Standard library only.** No dependencies, no virtualenv. These run on a scheduler under `launchd`, and every dependency is one more thing that can be missing at 3 a.m.
+**Solo biblioteca estándar.** Sin dependencias, sin virtualenv. Esto corre bajo un planificador (`launchd`), y cada dependencia es una cosa más que puede faltar a las 3 de la mañana.
 
-## Files
+## Ficheros
 
-| File | What it does |
+| Fichero | Qué hace |
 | --- | --- |
-| `docker_monitor.py` | The monitor. Checks containers and disks every five minutes, records metrics, restarts non-critical containers and **verifies the restart**, escalates critical ones, opens a circuit breaker on repeated failures. |
-| `metrics_db.py` | Persistence. Writes, aggregation, retention with downsampling, and the safety net that prevents deleting un-aggregated data. |
-| `heartbeat.py` | Liveness for scheduled jobs. Writes a local record and optionally pushes to an external uptime monitor. |
-| `homelab_secrets.py` | Credential loading from environment or files outside version control. |
-| `test_docker_monitor.py` | Tests for the parsing and circuit-breaker logic. |
+| `docker_monitor.py` | El monitor. Revisa contenedores y discos cada cinco minutos, registra métricas, reinicia los no críticos y **verifica el reinicio**, escala los críticos, y abre un cortacircuitos ante fallos repetidos. |
+| `metrics_db.py` | Persistencia. Escrituras, agregación, retención con compresión, y la red de seguridad que impide borrar datos sin agregar. |
+| `heartbeat.py` | Señal de vida de las tareas programadas. Escribe un registro local y opcionalmente hace push a un monitor de uptime externo. |
+| `homelab_secrets.py` | Carga de credenciales desde el entorno o desde ficheros fuera del control de versiones. |
+| `test_docker_monitor.py` | Tests del parseo y de la lógica del cortacircuitos. |
 
-## Running it
+## Cómo ejecutarlo
 
-Every module self-tests against temporary databases and touches nothing real:
+Cada módulo se autocomprueba contra bases de datos temporales y no toca nada real:
 
 ```bash
-python3 metrics_db.py --selftest          # 22 assertions
-python3 test_docker_monitor.py            # 24 assertions
-python3 heartbeat.py --selftest           # 21 assertions
+python3 metrics_db.py --selftest          # 22 aserciones
+python3 test_docker_monitor.py            # 24 aserciones
+python3 heartbeat.py --selftest           # 21 aserciones
 ```
 
-The monitor has a dry run that records metrics but neither restarts anything nor sends notifications:
+El monitor tiene un modo de simulación que registra métricas pero ni reinicia nada ni envía notificaciones:
 
 ```bash
 python3 docker_monitor.py --dry-run
 ```
 
-## Configuration
+## Configuración
 
-Defaults resolve relative to this directory, so the self-tests work on any machine with no setup.
+Los valores por defecto resuelven relativos a este directorio, así que las autocomprobaciones funcionan en cualquier máquina sin configurar nada.
 
-| Variable | Default | Purpose |
+| Variable | Por defecto | Para qué |
 | --- | --- | --- |
-| `HOMELAB_DB` | `./data/homelab.db` | Metrics database |
-| `HOMELAB_STATE` | `./data/docker_monitor_state.json` | Last-known state, for edge-triggered alerts |
-| `HOMELAB_HEARTBEATS` | `./data/heartbeats/` | Heartbeat records and manifest |
-| `HOMELAB_SECRETS` | `./.secrets/telegram.env` | Credentials file |
-| `HOMELAB_MAINT_FILE` | `./data/.maintenance_until` | Maintenance window; suppresses notifications |
-| `DOCKER_BIN` | `docker` | Docker binary |
-| `DISK_DATA`, `DISK_BACKUP` | `/data`, `/backup` | Mount points to monitor |
-| `KUMA_BASE_URL` | `http://localhost:3001` | External uptime monitor |
+| `HOMELAB_DB` | `./data/homelab.db` | Base de datos de métricas |
+| `HOMELAB_STATE` | `./data/docker_monitor_state.json` | Último estado conocido, para alertar solo en el cambio |
+| `HOMELAB_HEARTBEATS` | `./data/heartbeats/` | Latidos y manifiesto |
+| `HOMELAB_SECRETS` | `./.secrets/telegram.env` | Fichero de credenciales |
+| `HOMELAB_MAINT_FILE` | `./data/.maintenance_until` | Ventana de mantenimiento; silencia notificaciones |
+| `DOCKER_BIN` | `docker` | Binario de Docker |
+| `DISK_DATA`, `DISK_BACKUP` | `/data`, `/backup` | Puntos de montaje a vigilar |
+| `KUMA_BASE_URL` | `http://localhost:3001` | Monitor de uptime externo |
 
-Credentials are read from the environment first, then from `HOMELAB_SECRETS` and any other `*.env` beside it. Nothing is ever read from source.
+Las credenciales se leen primero del entorno, después de `HOMELAB_SECRETS` y de cualquier otro `*.env` que haya a su lado. Nunca se leen del código fuente.
 
-## Three things worth reading for
+## Tres cosas por las que merece la pena leerlo
 
-**Nothing raises.** Every function in `metrics_db.py` and `heartbeat.py` catches its own exceptions and returns a neutral value. In application code that hides bugs; in a monitor, an unhandled exception means you stop hearing about everything else. `_selftest` asserts this explicitly by pointing the database at an unwritable path.
+**Nada lanza excepciones.** Todas las funciones de `metrics_db.py` y `heartbeat.py` capturan sus propias excepciones y devuelven un valor neutro. En código de aplicación eso esconde bugs; en un monitor, una excepción no capturada significa dejar de enterarte de todo lo demás. El `_selftest` lo verifica explícitamente apuntando la base de datos a una ruta donde no se puede escribir.
 
-**`success` means verified.** `restart_container()` waits, then asks `docker inspect` whether the container is actually running. It records `failed` when the command returned zero and the container did not come back. The [Reliability](../docs/case-studies/reliability.md) page explains why that distinction cost seven weeks.
+**`success` significa verificado.** `restart_container()` espera y después le pregunta a `docker inspect` si el contenedor está realmente corriendo. Registra `failed` cuando el comando devolvió cero y el contenedor no volvió. La página de [Fiabilidad](../docs/case-studies/reliability.md) explica por qué esa distinción costó siete semanas.
 
-**Deletion is guarded in SQL, not in the caller.** `prune()` will only delete an hour of raw data that already exists in the hourly aggregate. If the rollup fails, the prune is a no-op. The safety net is in the query so it cannot be bypassed by calling things in the wrong order.
+**El borrado está protegido en el SQL, no en el llamante.** `prune()` solo borra una hora de datos en crudo que ya exista en el agregado horario. Si la agregación falla, la purga no hace nada. La red de seguridad está en la consulta para que no se pueda saltar llamando a las cosas en el orden equivocado.
 
-## A caveat
+## Una advertencia
 
-This is a snapshot, not a mirror. The copies running on the host are the source of truth and will drift from these. Where that matters, the [documentation](../docs/) describes the behaviour rather than the line numbers.
+Esto es una foto, no un espejo. Las copias que corren en el host son la fuente de verdad y divergirán de estas. Donde eso importa, la [documentación](../docs/) describe el comportamiento en lugar de los números de línea.
+
+> Los comentarios del código están en castellano, igual que el resto del repositorio.

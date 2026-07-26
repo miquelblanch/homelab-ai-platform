@@ -1,4 +1,4 @@
-name: Deploy docs
+name: Publicar documentación
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   pages: write
   id-token: write
 
-# Never cancel a running deploy; queue instead.
+# Nunca cancelar un despliegue en curso; encolar en su lugar.
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -28,14 +28,14 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      # --strict turns warnings into errors: a broken internal link
-      # fails the build instead of shipping a 404.
+      # --strict convierte los avisos en errores: un enlace interno roto
+      # tumba el build en vez de publicar un 404.
       - run: mkdocs build --strict
 
-      # The operational code ships with tests; run them so a broken
-      # snapshot cannot be published alongside documentation claiming
-      # that everything passes.
-      - name: Self-tests
+      # El código operativo va con tests; se ejecutan para que una copia
+      # rota no pueda publicarse junto a documentación que afirma que
+      # todo pasa.
+      - name: Autocomprobaciones
         working-directory: src
         run: |
           python3 metrics_db.py --selftest

@@ -1,42 +1,42 @@
 # Homelab AI Platform
 
-A self-hosted AI platform on a single Mac Mini M4 Pro: a Telegram agent with cost-aware model routing, a hybrid-search RAG over ~2,000 documents, and 41 containers with instrumented, verified auto-remediation.
+Una plataforma de IA autoalojada sobre un único Mac Mini M4 Pro: un agente de Telegram con enrutado de modelos por coste, un RAG de búsqueda híbrida sobre ~2.000 documentos, y 41 contenedores con auto-remediación instrumentada y verificada.
 
-**📖 [Read the full case study →](https://miquelblanch.github.io/homelab-ai-platform/)**
+**📖 [Leer el caso de estudio completo →](https://miquelblanch.github.io/homelab-ai-platform/)**
 
 ---
 
-## The short version
+## La versión corta
 
-While instrumenting the metrics pipeline, three indicators that had been green for months turned out to measure something other than what their labels claimed:
+Instrumentando el pipeline de métricas, tres indicadores que llevaban meses en verde resultaron medir algo distinto de lo que prometía su etiqueta:
 
-| Indicator | What it appeared to say | What it actually measured |
+| Indicador | Lo que parecía decir | Lo que medía en realidad |
 | --- | --- | --- |
-| Auto-remediation: 100% success | restarts fix the problem | `docker restart` returned exit code 0 |
-| Container health ratio | share of healthy containers | everything not explicitly broken |
-| Relays 5/5 | all nine relays are up | five checks pass, three of them unrelated |
+| Auto-remediación: 100% de éxito | los reinicios arreglan el problema | que `docker restart` devolvió 0 |
+| Ratio de salud de contenedores | proporción de contenedores sanos | todo lo que no estaba roto explícitamente |
+| Relays 5/5 | los nueve relays funcionan | cinco comprobaciones pasan, tres sin relación |
 
-None of them was broken. None measured what it promised. Closing that gap is what this project is about.
+Ninguno estaba roto. Ninguno medía lo que prometía. Cerrar esa distancia es de lo que va este proyecto.
 
-## What's here
+## Qué hay aquí
 
 ```
-docs/    the case study, built with Material for MkDocs
-src/     the operational code, sanitized: monitoring, metrics,
-         remediation, retention, heartbeats, and their tests
+docs/    el caso de estudio, construido con Material for MkDocs
+src/     el código operativo, saneado: monitorización, métricas,
+         remediación, retención, latidos y sus tests
 ```
 
 ## Stack
 
-Python 3.11, standard library only for the operational scripts · Docker via OrbStack · SQLite · PostgreSQL with pgvector · Ollama (`nomic-embed-text`) · LM Studio (`qwen3.5-9b`) · DeepSeek · Home Assistant · Immich · Jellyfin · Nextcloud · Obsidian · Traefik · CrowdSec · Beszel · Uptime Kuma
+Python 3.11, solo biblioteca estándar en los scripts operativos · Docker sobre OrbStack · SQLite · PostgreSQL con pgvector · Ollama (`nomic-embed-text`) · LM Studio (`qwen3.5-9b`) · DeepSeek · Home Assistant · Immich · Jellyfin · Nextcloud · Obsidian · Traefik · CrowdSec · Beszel · Uptime Kuma
 
-## Running the docs locally
+## Levantar la documentación en local
 
 ```bash
 pip install -r requirements.txt
 mkdocs serve
 ```
 
-## A note on what is not here
+## Una nota sobre lo que no está aquí
 
-This documents a system that runs in my home. Network addresses, domains, hostnames, port mappings and any detail about externally exposed surface are withheld or illustrative. The software is named; the topology is not. Nothing in this repository is a working configuration for my actual network, by design. The engineering is the point; the inventory is not.
+Esto documenta un sistema que corre en mi casa. Las direcciones de red, dominios, nombres de host, mapeos de puertos y cualquier detalle sobre la superficie expuesta a internet están omitidos o son ilustrativos. El software se nombra; la topología no. Nada en este repositorio es una configuración funcional de mi red real, por diseño. La ingeniería es el objetivo; el inventario no.
