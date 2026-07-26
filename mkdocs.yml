@@ -37,6 +37,7 @@ nav:
   - Visión general: index.md
   - Arquitectura: architecture.md
   - Casos de estudio:
+      - El agente: case-studies/agent.md
       - Fiabilidad: case-studies/reliability.md
       - Auditoría de seguridad: case-studies/security.md
   - Decisiones y errores: decisions.md
@@ -44,7 +45,6 @@ nav:
 # Páginas aún sin escribir: se excluyen del build para que no queden
 # accesibles por URL. Quitar de aquí cuando tengan contenido.
 exclude_docs: |
-  case-studies/agent.md
   case-studies/rag.md
 
 markdown_extensions:

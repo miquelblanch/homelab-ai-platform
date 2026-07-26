@@ -44,6 +44,10 @@ Ese es el hilo que recorre toda esta documentación: la diferencia entre un sist
 
     Cómo encajan las piezas: el runtime del agente, el motor de RAG, la capa de monitorización, y por qué la red de contenedores necesita relays para alcanzar dispositivos físicos.
 
+- **[El agente](case-studies/agent.md)**
+
+    Enrutado de modelos por coste, tool calling contra infraestructura real, aprobación humana, y las tres formas en que un modelo local de 9B falló en silencio.
+
 - **[Fiabilidad](case-studies/reliability.md)**
 
     Persistencia de métricas, remediación verificada, cortacircuitos, retención con agregación, y latidos para las tareas programadas.
