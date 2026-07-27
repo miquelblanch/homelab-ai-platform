@@ -204,6 +204,32 @@ Y la de fondo: **los valores por defecto que solo se aplican en la creación no 
 
 ---
 
+### El backup que llevaba meses sin borrar nada
+
+**Qué creía.** Que el respaldo era un espejo del disco de datos: lo que se borra en el origen desaparece del destino. Es lo que hace `rsync --delete`, y ahí estaba, en la línea de comandos.
+
+**Qué pasaba.** Dos directorios de sistema de macOS —los que guardan el historial de versiones y los temporales— son ilegibles incluso para el propietario de la máquina. rsync no podía abrirlos y terminaba con código 23: transferencia parcial.
+
+Eso ya era invisible, porque el script nunca miraba el código de salida y su resumen decía `✅` pase lo que pase. Pero el daño real estaba una línea más arriba en el log:
+
+```
+IO error encountered -- skipping file deletion
+```
+
+**rsync desactiva la fase de `--delete` cuando encuentra un error de E/S.** Y su razonamiento es correcto: si no ha podido leer el origen entero, borrar en el destino podría cargarse ficheros que sí existen y que no ha llegado a ver. Es una salvaguarda bien pensada.
+
+La consecuencia es que el respaldo dejó de ser un espejo y pasó a ser un acumulado: todo lo que había existido alguna vez, incluido lo borrado a propósito. Y creciendo.
+
+**Cómo salió a la luz.** Por accidente, arreglando otra cosa. Estaba quitando una credencial escrita a fuego en ese mismo script, ejecuté el backup para comprobar que el cambio no lo rompía, y me fijé en un código de salida que llevaba meses ahí.
+
+**El arreglo, en tres capas.** Excluir los dos directorios de sistema, para que el error desaparezca. Capturar el código de salida e interpretarlo — 0 y 24 son correctos, cualquier otro es un fallo con aviso. Y que el latido que lee el verificador registre el resultado real, en vez de escribir siempre lo mismo.
+
+**Y entonces apareció el segundo problema, que el primero estaba tapando.** Con el borrado funcionando otra vez, rsync intentó eliminar un fichero huérfano y no pudo: pertenecía a `root`. Había 114 así, restos de alguna ejecución antigua del backup con privilegios elevados. Un solo `sudo` de hace meses dejando ficheros que el proceso normal no puede gestionar, con el síntoma apareciendo mucho después y en un sitio que no lo sugiere.
+
+**Lección:** un salvaguarda silencioso es un fallo silencioso. rsync hizo lo correcto —dejar de borrar ante la duda— y lo comunicó por el único canal que nadie estaba leyendo: su código de salida. **Un componente que se degrada para protegerte necesita que alguien compruebe si se ha degradado**, exactamente igual que el espejo del disco de respaldo.
+
+---
+
 ### Comprimí la evidencia antes de analizarla
 
 **Qué hice.** Por la mañana implementé y ejecuté la política de retención, que agregó el detalle a cinco minutos de abril en medias horarias.
@@ -228,8 +254,9 @@ Releyendo todo esto, casi todos son el mismo error con distinta ropa.
 | Configuración de SSH | solo clave | un fichero, no un intento de login |
 | Push del latido | enviado | que se había escrito un fichero local |
 | Tareas programadas | todas presentes | todas las tareas *cargadas* presentes |
+| Backup diario | el respaldo es un espejo del origen | que el script llegó al final |
 
-Seis indicadores. Ninguno roto. Cada uno medía algo real y lo medía correctamente. **Ninguno medía lo que su etiqueta prometía**, y todos estaban en verde.
+Siete indicadores. Ninguno roto. Cada uno medía algo real y lo medía correctamente. **Ninguno medía lo que su etiqueta prometía**, y todos estaban en verde.
 
 ### Por qué pasa siempre lo mismo
 

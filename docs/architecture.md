@@ -1,18 +1,18 @@
 # Arquitectura
 
-## Primero, las restricciones
+## Las restricciones
 
 Todas las decisiones no obvias de este sistema salen de cuatro restricciones. Conviene enunciarlas antes que los diagramas, porque si no varias elecciones parecen errores de principiante.
 
 ### Una sola máquina
 
-Un Mac Mini M4 Pro con 64 GB de memoria unificada. Sin clúster, sin failover, sin un segundo nodo *al que* hacer failover.
+Un Mac Mini M4 Pro con 64 GB de memoria unificada. Sin clúster, sin un segundo nodo *al que* hacer failover.
 
 La consecuencia práctica es que **la disponibilidad no viene de la redundancia sino de la velocidad de recuperación**. No hay forma de sobrevivir a que esta máquina se apague; lo único que se puede optimizar es cuánto se tarda en volver, y cuánto se pierde por el camino. De ahí que el esfuerzo esté puesto en backups verificados y en auto-remediación, y no en alta disponibilidad.
 
 También significa que cualquier cosa que instale compite por la misma memoria. El modelo de embeddings local, los 41 contenedores, el modelo de lenguaje de 9B cargado a 64K de contexto y PostgreSQL conviven en los mismos 64 GB. Eso acota qué modelos se pueden usar mucho más que cualquier consideración de calidad.
 
-### macOS, no Linux
+### MacOS
 
 El runtime de contenedores es OrbStack. Los contenedores corren en una red virtualizada que **no alcanza la LAN física directamente**.
 
@@ -20,7 +20,7 @@ En Linux con `network_mode: host` esto no sería un problema: el contenedor comp
 
 Para casi todo da igual: un servidor web solo necesita que le lleguen peticiones. Para la domótica es determinante, porque su función entera consiste en hablar con aparatos que están al otro lado de esa frontera. Es la restricción que genera la parte más rara de este sistema, y tiene su propia sección más abajo.
 
-### Una casa, no una empresa
+### Hogar
 
 El radio de impacto de una caída es que mi familia no pueda ver una película o que las luces no se enciendan solas.
 
@@ -97,7 +97,7 @@ flowchart TB
 
 ---
 
-## El agente
+## El agente (Hermes Agent)
 
 ### Qué es y por qué no está en un contenedor
 
@@ -164,7 +164,7 @@ El agente lo consulta desde Telegram con comandos dedicados, y también lo usa i
 
 ### Por qué la recuperación es híbrida
 
-Corren dos búsquedas en paralelo sobre el mismo corpus:
+Corren dos búsquedas en paralelo sobre el mismo sistema:
 
 **Búsqueda vectorial densa.** Cada chunk está representado por un vector de 768 dimensiones, indexado con HNSW sobre pgvector. La consulta se convierte en un vector y se buscan los chunks más cercanos por similitud de coseno. Captura significado: encuentra documentos que hablan de lo mismo aunque no compartan una sola palabra.
 
@@ -176,7 +176,7 @@ Los dos conjuntos de resultados se combinan mediante **reciprocal rank fusion**:
 
 La léxica clava esos casos y falla estrepitosamente con cualquier cosa formulada de otra manera que en el original.
 
-### Embeddings locales, y lo que cuesta
+### Embeddings locales
 
 Los embeddings se generan con Ollama sobre `nomic-embed-text`, 768 dimensiones, en la misma máquina.
 
@@ -268,7 +268,7 @@ Existe un comando que silencia todas las alertas durante un número de minutos. 
 
 Es lo que permite actualizar imágenes o reiniciar cosas a mano sin recibir veinte mensajes. Las métricas se siguen registrando durante la ventana — un incidente silenciado sigue siendo un dato.
 
-### SQLite, no Prometheus
+### SQLite
 
 Las métricas van a un fichero SQLite. Es una degradación deliberada respecto al estándar del sector, y conviene argumentarla porque parece pereza.
 
@@ -286,18 +286,64 @@ La retención es explícita y no una función de la base de datos: resolución c
 
 ### La topología
 
-Dos discos NVMe separados, más el disco de sistema:
+Tres volúmenes con papeles bien separados.
 
-- Uno para **datos en vivo**: los volúmenes de todos los contenedores, las fotos, el audio, las notas.
-- Otro que recibe el **backup**, y nada más.
+**Disco interno del Mac Mini — ~500 GB.** Solo el sistema operativo y las aplicaciones. **Ningún dato del homelab vive aquí**, ni siquiera los volúmenes de los contenedores.
 
-Que sean discos físicos distintos es el punto: un fallo de hardware en uno no se lleva al otro.
+**NVMe de datos — 2 TB.** Todo lo que está en uso:
+
+- Los volúmenes de los 41 contenedores: bases de datos, configuración y estado de Immich, Jellyfin, Nextcloud, Vaultwarden, la domótica y el resto
+- La biblioteca de fotos
+- La biblioteca de audio
+- El vault de notas
+- El propio proyecto del homelab: scripts, documentación, ficheros de estado y la base de datos de métricas
+
+**Volumen de respaldo — 5 TB útiles, en espejo sobre dos discos de 5 TB.** Dos cosas que no se parecen:
+
+- La copia diaria completa del NVMe de datos, más la configuración del agente
+- La **biblioteca de vídeo**, que vive aquí directamente y no es una copia de nada
+
+### Por qué el vídeo está en el disco de respaldo
+
+Es la decisión menos obvia del reparto, y responde a una pregunta que conviene hacerse con cada tipo de dato: **si esto desaparece, ¿se puede volver a conseguir?**
+
+Las fotos, las notas y los documentos no. Son irreemplazables, así que viven en el disco rápido y **tienen una copia** en el volumen en espejo.
+
+Una película sí. Ocupa muchísimo, se consume en streaming sin necesitar velocidad de NVMe, y si se pierde se vuelve a obtener. Así que vive directamente en el volumen grande y **no se respalda en ningún sitio**: su única protección es el espejo, que la salva de que muera un disco pero no de un borrado accidental.
+
+Eso es deliberado, y es lo que hace que un backup de 2 TB de datos quepa holgadamente en 5 TB junto a una videoteca. La alternativa —respaldarlo todo por igual— habría exigido el doble de disco para proteger lo que menos lo necesita.
+
+Dos decisiones detrás de este reparto.
+
+**Los datos en vivo no están en el disco de sistema.** Eso permite reinstalar macOS, o sustituir la máquina entera, sin tocar nada del homelab: los volúmenes de los contenedores están en un disco aparte que se conecta al hardware nuevo. Convierte una reinstalación de sistema en un trámite en lugar de en una restauración completa.
+
+**El destino del backup es un espejo, no un disco suelto.** Los dos discos de 5 TB están configurados en RAID 1: cada byte se escribe en los dos, y el volumen presenta 5 TB útiles en lugar de 10.
+
+Renunciar a la mitad de la capacidad para respaldar tiene su lógica: un backup en un único disco es un punto de fallo que solo se descubre el día que hace falta, precisamente cuando ya has perdido el original. Con el espejo, un disco puede morir sin que el backup se pierda.
+
+Y como el espejo se degrada en silencio —esa es toda su gracia, seguir funcionando con un disco menos—, hay una **comprobación periódica del estado del RAID** que avisa si deja de estar completo. Sin ella, un espejo degradado se comporta exactamente igual que uno sano hasta que falla el segundo disco.
+
+Es el mismo principio que recorre todo el proyecto: un componente cuyo diseño consiste en tolerar fallos necesita alguien que vigile si los está tolerando.
 
 ### Qué se copia
 
-Cada noche a las 02:00: el volumen de datos completo, la configuración del agente, y **nueve volcados de base de datos**.
+Cada noche a las 02:00, del NVMe de datos al volumen en espejo: **el disco de datos entero**, la configuración del agente, y **nueve volcados de base de datos**.
 
-Los volcados son necesarios porque copiar los ficheros de una base de datos que está escribiendo produce una copia que puede no ser restaurable. Un `pg_dump` o equivalente, en cambio, produce un fichero coherente.
+### El problema de las bases de datos abiertas
+
+Copiar los ficheros de una base de datos que está escribiendo produce una copia que puede no ser restaurable: se captura la mitad de una transacción, o un índice que ya no corresponde a los datos.
+
+El backup lo resuelve en dos pasos, y el orden importa:
+
+**Antes de copiar nada**, genera un volcado coherente de cada base de datos. Para las SQLite usa el comando `.backup` del propio motor, que produce un fichero consistente aunque haya escrituras en curso; para las PostgreSQL y MariaDB, un volcado SQL completo.
+
+**Después copia**, excluyendo los ficheros vivos de esas mismas bases de datos. Los directorios de datos de PostgreSQL y MariaDB, los ficheros WAL, los journals y los `-shm`/`-wal` de SQLite **quedan fuera de la copia a propósito**: son justamente los que no se pueden copiar en caliente, y ya están representados por su volcado.
+
+**Al terminar, borra los volcados temporales** del disco de origen, para no dejar duplicados ocupando espacio en el disco rápido.
+
+También se excluyen cachés, transcodificaciones de vídeo, sockets y ficheros de proceso. Nada de eso es un dato: es estado reconstruible que solo haría el backup más lento y más grande.
+
+Es un detalle de fontanería y es donde se decide si un backup sirve. Una copia que incluye el directorio vivo de una base de datos parece completa —pesa lo que tiene que pesar, los ficheros están— y no arranca al restaurarla.
 
 ### La parte que de verdad importa
 
