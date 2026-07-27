@@ -21,4 +21,15 @@ regex = '''/(Volumes|Users)/[A-Za-z]'''
 tags = ["path"]
 
 [allowlist]
-paths = ['''\.gitleaks\.toml$''']
+# gitleaks --no-git NO respeta .gitignore: recorre el árbol de ficheros entero.
+# Sin estas exclusiones, un entorno virtual de Python genera veinte falsos
+# positivos de la regla absolute-host-path —los scripts de un venv llevan la
+# ruta absoluta en el shebang y en pyvenv.cfg— y a las dos semanas nadie lee
+# la salida de la herramienta. Un escáner ruidoso es un escáner apagado.
+paths = [
+  '''\.gitleaks\.toml$''',
+  '''(^|/)\.venv/''',
+  '''(^|/)venv/''',
+  '''(^|/)site/''',
+  '''(^|/)__pycache__/''',
+]
