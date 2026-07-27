@@ -12,7 +12,7 @@ Una plataforma de IA autoalojada sobre un único Mac Mini M4 Pro. Da servicio a 
 
 **Un RAG de búsqueda híbrida** sobre 1.991 documentos y 10.762 chunks. Búsqueda vectorial (HNSW) fusionada con búsqueda léxica (BM25) mediante reciprocal rank fusion. Los embeddings corren en local sobre `nomic-embed-text`.
 
-**Infraestructura que se auto-repara.** Cada cinco minutos se revisan 41 contenedores y 3 discos. Los no críticos se reinician automáticamente y el reinicio **se verifica**; los críticos se escalan a un humano. Un cortacircuitos detiene el bucle cuando un contenedor empieza a caerse en cadena.
+**Infraestructura que se recupera sola.** Cada cinco minutos se revisan 41 contenedores y 3 discos. Los no críticos se reinician automáticamente y el reinicio **se verifica**; los críticos se escalan a un humano. Un cortacircuitos detiene el bucle cuando un contenedor empieza a caerse en cadena.
 
 **Backups que se comprueban, no que se suponen.** Snapshot nocturno más nueve volcados de base de datos, seguidos de trece verificaciones de integridad a la mañana siguiente. El informe llega tanto si pasa como si falla.
 
@@ -26,7 +26,7 @@ Instrumentando el pipeline de métricas, tres indicadores que llevaban meses en 
 
 | Indicador | Lo que parecía decir | Lo que medía en realidad |
 | --- | --- | --- |
-| Auto-remediación: 100% de éxito | los reinicios arreglan el problema | que `docker restart` devolvió 0 |
+| Recuperación automática: 100% de éxito | los reinicios arreglan el problema | que `docker restart` devolvió 0 |
 | Ratio de salud de contenedores | proporción de contenedores sanos | todo lo que no estaba roto explícitamente |
 | Relays 5/5 | los nueve relays funcionan | cinco comprobaciones pasan, tres sin relación |
 
@@ -54,7 +54,7 @@ Ese es el hilo que recorre toda esta documentación: la diferencia entre un sist
 
 - **[Fiabilidad](case-studies/reliability.md)**
 
-    Persistencia de métricas, remediación verificada, cortacircuitos, retención con agregación, y latidos para las tareas programadas.
+    Persistencia de métricas, recuperación verificada, cortacircuitos, retención con agregación, y latidos para las tareas programadas.
 
 - **[Auditoría de seguridad](case-studies/security.md)**
 

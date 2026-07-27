@@ -83,7 +83,7 @@ Es el mismo patrón que recorre este proyecto entero, aplicado a otra capa: **al
 
 **El modelo se carga al arrancar la máquina**, mediante un servicio del sistema que levanta el servidor de inferencia y carga explícitamente el modelo. Es idempotente, tiene reintentos, y avisa por Telegram si no lo consigue.
 
-**El contexto tuvo que subirse a 64K.** El runtime del agente exige un mínimo de 64.000 tokens de contexto, y el valor por defecto de LM Studio era de unos 24.800. Con ese ajuste el modelo cargaba correctamente y después fallaba al usarse, con un error que no apuntaba al contexto.
+**El contexto tuvo que subirse a 64K.** Hermes Agent exige un mínimo de 64.000 tokens de contexto, y el valor por defecto de LM Studio era de unos 24.800. Con ese ajuste el modelo cargaba correctamente y después fallaba al usarse, con un error que no apuntaba al contexto.
 
 **Las tareas simples se fijaron a local** de forma explícita, en vez de depender de un fallback. Un fallback es un mecanismo de emergencia; si quieres que algo corra en local, dilo.
 
@@ -141,7 +141,7 @@ Merece la pena enunciarlas porque son reales y siguen ahí.
 
 ### El esfuerzo de razonamiento es global, no por proveedor
 
-El runtime envía el mismo parámetro de `reasoning_effort` a todos los modelos. El modelo local no soporta el valor configurado y degrada silenciosamente a otro, emitiendo un aviso.
+Hermes Agent envía el mismo parámetro de `reasoning_effort` a todos los modelos. El modelo local no soporta el valor configurado y degrada silenciosamente a otro, emitiendo un aviso.
 
 Intentar acotarlo por proveedor —definirlo solo para el backend local— **no se respeta**: la configuración global gana. Y bajar el valor global degradaría también al modelo cloud, que es el que atiende las conversaciones interactivas.
 
@@ -237,7 +237,7 @@ El umbral de 0,6 es un parámetro sin justificar empíricamente. Se eligió a oj
 
 El agente expone comandos dedicados que consultan el RAG desde Telegram, y también lo usa internamente cuando una pregunta necesita contexto que no está en la conversación.
 
-Lo relevante desde el punto de vista del agente es que la recuperación es **una herramienta más**: el modelo decide cuándo invocarla. Eso significa que la calidad de la respuesta depende de dos cosas encadenadas — que el modelo decida buscar, y que la búsqueda devuelva lo correcto — y que un fallo en cualquiera de las dos produce el mismo síntoma.
+Lo relevante desde el punto de vista del agente es que la búsqueda en el corpus es **una herramienta más**: el modelo decide cuándo invocarla. Eso significa que la calidad de la respuesta depende de dos cosas encadenadas — que el modelo decida buscar, y que la búsqueda devuelva lo correcto — y que un fallo en cualquiera de las dos produce el mismo síntoma.
 
 El motor de recuperación está descrito en [El RAG](rag.md).
 

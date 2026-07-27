@@ -229,7 +229,7 @@ Se secuenciaron los últimos a propósito, por dos motivos. Cada uno **arriesga 
 
 Esa secuenciación es la parte que defendería en una revisión: **arregla primero lo crítico y barato, y acepta los ítems estructurales como conocidos y planificados en vez de fingir que el plan está completo.**
 
-Un plan de remediación con todos los ítems marcados como hechos suele ser un plan que se acotó a lo que era fácil. Un riesgo aceptado de forma explícita, con su motivo escrito y su lugar en la cola, es una decisión de ingeniería. Un riesgo que nadie ha enunciado es un descuido.
+Un plan de recuperación con todos los ítems marcados como hechos suele ser un plan que se acotó a lo que era fácil. Un riesgo aceptado de forma explícita, con su motivo escrito y su lugar en la cola, es una decisión de ingeniería. Un riesgo que nadie ha enunciado es un descuido.
 
 ---
 

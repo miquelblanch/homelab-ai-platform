@@ -49,7 +49,7 @@ Esa es la primera lección del día, y la más barata: **los datos que nadie lee
 
 ### Cómo llegué a mirar ahí
 
-Una vez el monitor empezó a escribir métricas, me quedaba una pregunta obvia: **¿cuántas veces ha intervenido este sistema, y con qué resultado?** Es el número que resume si la auto-remediación aporta algo o es decoración.
+Una vez el monitor empezó a escribir métricas, me quedaba una pregunta obvia: **¿cuántas veces ha intervenido este sistema, y con qué resultado?** Es el número que resume si la recuperación automática aporta algo o es decoración.
 
 La respuesta debería estar en una tabla llamada `restart_history`. Y ahí empezó el segundo problema.
 
@@ -235,7 +235,7 @@ Tres intentos legítimos —porque a veces un reinicio sí resuelve— y al cuar
 
 *El recuento excluye los propios eventos `circuit_breaker` y `skipped`.* Solo cuenta intentos reales de reinicio. Si contase también sus propias decisiones de no actuar, cada ciclo añadiría una fila al recuento, el número crecería solo, y el cortacircuitos no se cerraría jamás. Se alimentaría a sí mismo.
 
-*Si falla la lectura de la base de datos, el recuento devuelve cero.* Es decir: ante un problema de almacenamiento, el sistema **sí intenta** el reinicio. La alternativa —fallar hacia el bloqueo— significaría que un disco lleno desactiva silenciosamente toda la auto-remediación, que es un modo de fallo mucho peor que reiniciar de más.
+*Si falla la lectura de la base de datos, el recuento devuelve cero.* Es decir: ante un problema de almacenamiento, el sistema **sí intenta** el reinicio. La alternativa —fallar hacia el bloqueo— significaría que un disco lleno desactiva silenciosamente toda la recuperación automática, que es un modo de fallo mucho peor que reiniciar de más.
 
 **Cómo se cierra.** Solo con el paso del tiempo: cuando los intentos salen de la ventana de seis horas, vuelve a permitir. No hay reseteo manual, lo cual es una carencia reconocida — forzarlo hoy implica borrar filas del histórico, que es feo. Un comando de reseteo por Telegram sería lo suyo.
 
@@ -337,7 +337,7 @@ Pero cuatro relays no tenían cobertura de ningún tipo. Si alguno lleva semanas
 
 ### El problema de fondo
 
-El denominador era **"las cosas que resulta que miramos"**, presentado como **"las cosas que importan"**. Es lo mismo que pasaba con la tasa de éxito de la remediación, expresado en otro formato: un cociente cuya parte de abajo se fue definiendo sola, por acumulación, y cuya etiqueta describe otra cosa.
+El denominador era **"las cosas que resulta que miramos"**, presentado como **"las cosas que importan"**. Es lo mismo que pasaba con la tasa de éxito de la recuperación, expresado en otro formato: un cociente cuya parte de abajo se fue definiendo sola, por acumulación, y cuya etiqueta describe otra cosa.
 
 Y es un patrón especialmente traicionero porque un ratio `5/5` se lee como completitud. Nadie mira un `5/5` y se pregunta "cinco de qué".
 
@@ -502,7 +502,7 @@ Todo esto fue una tarde. Y la mayor parte no fue escribir código: fue leer dato
 
 Sigue abierto:
 
-- **La causa raíz del contenedor** que consumió el 59% de las remediaciones. Sabemos qué no era; no sabemos qué era.
+- **La causa raíz del contenedor** que consumió el 59% de las recuperaciones. Sabemos qué no era; no sabemos qué era.
 - **Cuatro relays sin cobertura** de monitorización de ningún tipo.
 - **Los latidos cubren una tarea** de las nueve programadas. El resto sigue dependiendo del descubrimiento, con el agujero que eso implica.
 - **No hay ninguna comprobación de consistencia** sobre la propia serie de métricas.

@@ -100,7 +100,7 @@ La primera hipótesis fue la evidente: algo se rompió. Fui a buscar el código 
 
 ### Un 100% de éxito que medía códigos de salida
 
-**Qué reportaba.** El sistema de auto-remediación decía que sus 83 intervenciones habían tenido éxito. Las 83.
+**Qué reportaba.** El sistema de recuperación automática decía que sus 83 intervenciones habían tenido éxito. Las 83.
 
 **Qué medía.** Registraba éxito cuando `docker restart` devolvía código 0, cosa que ocurre en cuanto el daemon **acepta** la orden. No espera a que el contenedor arranque, no comprueba que siga vivo, y no sabe nada de lo que pasa después.
 
@@ -248,7 +248,7 @@ Releyendo todo esto, casi todos son el mismo error con distinta ropa.
 
 | | Reportaba | Medía |
 | --- | --- | --- |
-| Éxito de la remediación | que el problema se arreglaba | un código de salida |
+| Éxito de la recuperación | que el problema se arreglaba | un código de salida |
 | Salud de contenedores | sano | no explícitamente roto |
 | Cobertura de relays | nueve relays en pie | cinco comprobaciones sin relación pasando |
 | Configuración de SSH | solo clave | un fichero, no un intento de login |

@@ -8,7 +8,7 @@ Todas las decisiones no obvias de este sistema salen de cuatro restricciones. Co
 
 Un Mac Mini M4 Pro con 64 GB de memoria unificada. Sin clúster, sin un segundo nodo *al que* hacer failover.
 
-La consecuencia práctica es que **la disponibilidad no viene de la redundancia sino de la velocidad de recuperación**. No hay forma de sobrevivir a que esta máquina se apague; lo único que se puede optimizar es cuánto se tarda en volver, y cuánto se pierde por el camino. De ahí que el esfuerzo esté puesto en backups verificados y en auto-remediación, y no en alta disponibilidad.
+La consecuencia práctica es que **la disponibilidad no viene de la redundancia sino de la velocidad de recuperación**. No hay forma de sobrevivir a que esta máquina se apague; lo único que se puede optimizar es cuánto se tarda en volver, y cuánto se pierde por el camino. De ahí que el esfuerzo esté puesto en backups verificados y en recuperación automática, y no en alta disponibilidad.
 
 También significa que cualquier cosa que instale compite por la misma memoria. El modelo de embeddings local, los 41 contenedores, el modelo de lenguaje de 9B cargado a 64K de contexto y PostgreSQL conviven en los mismos 64 GB. Eso acota qué modelos se pueden usar mucho más que cualquier consideración de calidad.
 
