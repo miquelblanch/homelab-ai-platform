@@ -37,6 +37,6 @@ pip install -r requirements.txt
 mkdocs serve
 ```
 
-## Una nota sobre lo que no está aquí
+## Una nota final
 
-Esto documenta un sistema que corre en mi casa. Las direcciones de red, dominios, nombres de host, mapeos de puertos y cualquier detalle sobre la superficie expuesta a internet están omitidos o son ilustrativos. El software se nombra; la topología no. Nada en este repositorio es una configuración funcional de mi red real, por diseño. La ingeniería es el objetivo; el inventario no.
+Esto documenta un sistema que corre en un entorno privado. Las direcciones de red, dominios, nombres de host, mapeos de puertos y cualquier detalle sobre la superficie expuesta a internet están omitidos o son ilustrativos. El software se nombra; la topología no. La ingeniería es el objetivo; no el hacer un inventario de los elementos de la infraestructura.
