@@ -6,9 +6,9 @@ Está dividida en dos mitades. Arriba, decisiones que aguantaron, cada una con l
 
 ---
 
-## Decisiones que aguantaron
+## Primeras Decisiones
 
-Cada una lleva su condición de reversión, porque **una decisión sin condición de reversión es una preferencia**. Si no sabes decir bajo qué circunstancias tu elección sería equivocada, no has elegido: has adoptado una costumbre.
+Cada una lleva su rollback, porque **una decisión sin pensar en el rollback es un error**.
 
 ### El agente corre nativo, no en un contenedor
 
@@ -18,7 +18,7 @@ El modo de fallo es el peor de todos: **solo aparece cuando algo ya ha ido mal**
 
 Es el mismo principio por el que un sistema de monitorización no debe depender de la infraestructura que vigila.
 
-*Revertir cuando* el agente deje de tocar el runtime de contenedores.
+*Rollback cuando* el agente deje de tocar el runtime de contenedores.
 
 ### SQLite en vez de Prometheus
 
@@ -28,13 +28,13 @@ En ese régimen, SQLite significa: ningún contenedor extra que mantener, ningun
 
 Prometheus y Grafana traerían descubrimiento automático de objetivos, un lenguaje de consulta pensado para series temporales, y alertas expresadas sobre las propias métricas. Todo eso vale mucho con muchos nodos. Con uno, son dos servicios más que **a su vez necesitan monitorización**, para resolver un problema que hoy cabe en un fichero de 3 MB.
 
-*Revertir en torno a* diez nodos, o la primera vez que quiera reglas de alerta calculadas sobre las series en lugar de sobre las comprobaciones en crudo.
+*Rollback en torno a* diez nodos, o la primera vez que quiera reglas de alerta calculadas sobre las series en lugar de sobre las comprobaciones en crudo.
 
 ### Modelo local para las tareas programadas, cloud para lo interactivo
 
 El trabajo programado corre sin supervisión, a menudo, y arrastra contexto. Su coste tiene que ser cero o crece mientras nadie mira. El interactivo tiene a un humano esperando, así que manda la calidad y la latencia.
 
-*Revertir por tarea* — que es exactamente lo que pasó con las multi-tool, contado más abajo. La regla no es "local siempre"; es "local por defecto, y se sube lo que demuestre que lo necesita".
+*Rollback por tarea* — que es exactamente lo que pasó con las multi-tool, contado más abajo. La regla no es "local siempre"; es "local por defecto, y se sube lo que demuestre que lo necesita".
 
 ### Los monitores nunca lanzan excepciones
 
@@ -44,7 +44,7 @@ En código de aplicación esto sería mala práctica y de las peores: tragarse e
 
 El contrato está verificado en los propios tests: hay aserciones que apuntan la base de datos a rutas donde no se puede escribir y comprueban que la función devuelve un valor neutro en lugar de propagar.
 
-*Revertir* en ningún caso. La alternativa es un monitor que se muere en silencio.
+*Rollback* en ningún caso. La alternativa es un monitor que se cae sin que nos enteremos.
 
 ### Agregar antes de borrar
 
@@ -52,7 +52,7 @@ La retención comprime el detalle a medias horarias antes de purgarlo, y la purg
 
 La red de seguridad vive en la propia consulta SQL y no en el código que la llama. Es deliberado: una comprobación en el llamante se puede saltar invocando las funciones en el orden equivocado, o desde un sitio nuevo que no la conocía. Una condición dentro de la consulta no se puede esquivar.
 
-*Revertir* nunca. Es un seguro barato contra la clase de error que solo se comete una vez, porque la primera vez ya te has quedado sin los datos.
+*Rollback* nunca. Es un seguro barato contra la clase de error que solo se comete una vez, porque la primera vez ya te has quedado sin los datos.
 
 ### La auditoría es un script, no un documento
 

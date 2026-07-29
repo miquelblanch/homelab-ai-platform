@@ -101,11 +101,9 @@ flowchart TB
 
 ### Qué es y por qué no está en un contenedor
 
-Un agente conversacional accesible desde Telegram. Le escribes como a una persona, y puede responder preguntas, consultar la base de conocimiento, o ejecutar acciones sobre la infraestructura.
+Un agente conversacional accesible desde Telegram. Le escribes como a una persona, y puede responder preguntas, consultar la base de conocimiento, o ejecutar acciones sobre la infraestructura (por ejemplo, Home Assistant).
 
-Corre como **proceso nativo del sistema operativo, no dentro de un contenedor**, y eso es deliberado. El agente gestiona el runtime de contenedores: entre sus herramientas están listar contenedores, leer sus logs y reiniciarlos. Meterlo dentro de aquello que gestiona crea una dependencia circular con un modo de fallo especialmente desagradable — si Docker tiene un problema, el agente que podría diagnosticarlo está caído justo por ese problema. Y no puede reiniciarse a sí mismo.
-
-Es la misma razón por la que un sistema de monitorización no debería depender de la infraestructura que vigila.
+Corre como **proceso nativo del sistema operativo, no dentro de un contenedor**. El agente gestiona el runtime de contenedores: entre sus herramientas están listar contenedores, leer sus logs y reiniciarlos.
 
 ### Las tres clases de trabajo
 
@@ -115,11 +113,11 @@ Es la misma razón por la que un sistema de monitorización no debería depender
 
 **Consolidación de memoria.** Una pasada nocturna que compacta el historial de conversación en notas duraderas, para que el agente no arrastre indefinidamente todo lo que se ha dicho.
 
-### Aprobación humana para lo destructivo
+### Aprobación humana cada vez que elimina algún elemento
 
 Los contenedores están clasificados. Un grupo —bases de datos, gestor de contraseñas, domótica, proxy inverso— está marcado como crítico: **el sistema puede alertar sobre ellos pero no tocarlos**.
 
-El razonamiento es que un reinicio a ciegas de una base de datos con escrituras en vuelo puede convertir una incidencia menor en corrupción de datos. Para el resto, reiniciar es casi siempre inocuo y casi siempre resuelve, así que se automatiza.
+El razonamiento es que un reinicio a ciegas de una base de datos con escrituras puede convertir una incidencia menor en corrupción de datos. Para el resto, reiniciar es casi siempre inocuo y casi siempre resuelve, así que se automatiza.
 
 Esa frontera entre "actúa solo" y "pregunta primero" es una decisión de diseño, no una limitación técnica, y está definida por una lista explícita en el código.
 
@@ -224,7 +222,7 @@ flowchart LR
 
 Se gestionan como servicios del sistema, para que se levanten solos al arrancar la máquina.
 
-### Por qué es frágil de una forma interesante
+### Por qué es frágil
 
 Funciona bien y es estable. El problema es otro: **cada relay es un punto de fallo independiente e invisible desde dentro del contenedor.**
 
