@@ -2,7 +2,7 @@
 
 Las demás páginas describen un sistema que funciona. Esta va de cómo llegó hasta ahí, que fue bastante menos limpio.
 
-Está dividida en dos mitades. Arriba, decisiones que aguantaron, cada una con la condición bajo la cual dejaría de ser correcta. Abajo, ocho errores, con lo que costaron y lo que cambió.
+Está dividida en dos mitades. Arriba, decisiones que aguantaron, cada una con la condición bajo la cual dejaría de ser correcta. Abajo, diez errores, con lo que costaron y lo que cambió.
 
 ---
 
