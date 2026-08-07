@@ -2,7 +2,7 @@
 
 Las demás páginas describen un sistema que funciona. Esta va de cómo llegó hasta ahí, que fue bastante menos limpio.
 
-Está dividida en dos mitades. Arriba, decisiones que aguantaron, cada una con la condición bajo la cual dejaría de ser correcta. Abajo, ocho errores, con lo que costaron y lo que cambió.
+Está dividida en dos mitades. Arriba, decisiones que aguantaron, cada una con la condición bajo la cual dejaría de ser correcta. Abajo, once errores, con lo que costaron y lo que cambió.
 
 ---
 
@@ -239,6 +239,20 @@ La consecuencia es que el respaldo dejó de ser un espejo y pasó a ser un acumu
 **Qué tenía.** Medias horarias. Suficientes para llegar a la conclusión —de hecho la evidencia clave, las dos horas enteras a cero, salió de ahí— pero la secuencia fina se había perdido de forma permanente.
 
 **Lección:** investiga antes de comprimir. Las políticas de retención son **irreversibles** de una forma en que casi ninguna otra operación lo es. Puedes revertir un despliegue, restaurar una base de datos, deshacer un commit. No puedes recuperar la resolución de una serie temporal que ya has agregado.
+
+---
+
+### Doce contenedores marcados como críticos, seis sin forma de demostrarlo
+
+**Qué monté.** Un monitor que clasifica los contenedores en tres grupos: los marcados como críticos —bases de datos, gestor de domótica, proxy inverso, el túnel que expone servicios a internet— solo generan alerta y nunca se tocan solos; el resto se reinicia con verificación y un cortacircuito. La intención de la etiqueta "crítico" es que reciban la vigilancia más estricta.
+
+**Qué pasaba en realidad.** La lógica de salud es *en ejecución y sano*, y "sano" se lee del campo de estado que expone Docker — que solo puede decir "no sano" si el contenedor tiene un healthcheck definido. Sin eso, Docker nunca reporta nada distinto de "en ejecución", así que el monitor trata como sano cualquier proceso que siga vivo. Auditando los doce contenedores críticos contra su configuración real, seis no tenían ningún healthcheck: la base de datos y el caché de la plataforma de ficheros, la propia plataforma, el gestor de domótica, el proxy inverso y el túnel a internet. Justo los seis que se suponía mejor vigilados solo podían reportar que el proceso hubiera muerto del todo — un servicio arriba pero devolviendo errores, o con la base de datos colgada, era indistinguible de uno sano.
+
+**Cómo se manifestaba.** Sin síntoma directo — nada estaba caído en el sentido que el monitor podía ver. Salió a la luz investigando, por otra vía, un fallo real de una notificación programada, y preguntándose si el sistema habría podido detectarlo. La respuesta, mirando la configuración, fue que no.
+
+**Qué cambió.** Se añadió un healthcheck a los seis, cada uno con la herramienta nativa de su imagen: el script de comprobación de conexión de la base de datos, un ping al caché, una petición HTTP al endpoint de estado de cada plataforma, el subcomando de comprobación propio del proxy inverso —que ya tenía el endpoint habilitado, solo sin usar—, y una comprobación de puerto para el que no exponía nada más simple. Aplicado con una ventana de mantenimiento activa y verificando cada contenedor antes de seguir con el siguiente, porque dos de los seis exponen el sistema a internet.
+
+**La lección no es "añade healthchecks".** Es que una etiqueta de "crítico" no protege nada por sí sola: solo cambia lo que el sistema hace *si* detecta un fallo, nunca si puede detectarlo. Cualquier monitor construido sobre el campo de salud nativo de Docker hereda el mismo límite — sin una sonda explícita por servicio, "en ejecución" y "sano" son la misma cosa para la herramienta, aunque no lo sean en la realidad. Y nada se queja de esto: ni el monitor, que hace exactamente lo que se le pidió con el dato que tiene, ni el panel, que solo refleja lo que el monitor le manda. El hueco es silencioso hasta que alguien audita componente a componente, en vez de confiar en que la etiqueta signifique lo que promete.
 
 ---
 
