@@ -1,8 +1,12 @@
-name: Publicar documentación
+name: CI y publicación
 
+# Corre en cada PR (validación, sin publicar) y en cada push a main
+# (validación + publicación). Así un PR muestra checks reales en vez de
+# ser solo una pausa manual antes de fusionar.
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -20,6 +24,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+
+      # Misma versión y mismo comando que se corre en local antes de
+      # cualquier commit — ver .gitleaks.toml para el porqué del allowlist.
+      - name: Instalar gitleaks
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz | tar -xz gitleaks
+          sudo mv gitleaks /usr/local/bin/
+
+      - name: Escanear secretos
+        run: gitleaks detect --no-git --config .gitleaks.toml --redact
 
       - uses: actions/setup-python@v6
         with:
@@ -47,6 +61,9 @@ jobs:
           path: site
 
   deploy:
+    # Solo publica en push directo a main — nunca desde un PR, aunque
+    # venga de una rama local sin fusionar todavía.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     environment:
