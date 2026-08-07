@@ -2,7 +2,7 @@
 
 Una plataforma de IA autoalojada sobre un único Mac Mini M4 Pro. Da servicio a mi casa, pero está construida y operada con las prácticas que aplicaría a un sistema en producción: instrumentada, testeada, documentada y honesta sobre lo que hace mal.
 
-**41 contenedores. Un agente. 1.991 documentos indexados. Cero dependencias cloud para lo que importa.**
+**40 contenedores. Un agente. 1.991 documentos indexados. Cero dependencias cloud para lo que importa.**
 
 ---
 
@@ -12,7 +12,7 @@ Una plataforma de IA autoalojada sobre un único Mac Mini M4 Pro. Da servicio a 
 
 **Un RAG de búsqueda híbrida** sobre 1.991 documentos y 10.762 chunks. Búsqueda vectorial (HNSW) fusionada con búsqueda léxica (BM25) mediante reciprocal rank fusion. Los embeddings corren en local sobre `nomic-embed-text`.
 
-**Infraestructura que se recupera sola.** Cada cinco minutos se revisan 41 contenedores y 3 discos. Los no críticos se reinician automáticamente y el reinicio **se verifica**; los críticos se escalan a un humano. Un cortacircuitos detiene el bucle cuando un contenedor empieza a caerse en cadena.
+**Infraestructura que se recupera sola.** Cada cinco minutos se revisan 40 contenedores y 3 discos. Los no críticos se reinician automáticamente y el reinicio **se verifica**; los críticos se escalan a un humano. Un cortacircuitos detiene el bucle cuando un contenedor empieza a caerse en cadena.
 
 **Backups que se comprueban, no que se suponen.** Snapshot nocturno más nueve volcados de base de datos, seguidos de trece verificaciones de integridad a la mañana siguiente. El informe llega tanto si pasa como si falla.
 

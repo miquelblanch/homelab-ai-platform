@@ -2,7 +2,7 @@ site_name: Homelab AI Platform
 site_description: >-
   Una plataforma de IA autoalojada en un solo Mac Mini: un agente de Telegram
   con enrutado de modelos por coste, un RAG de búsqueda híbrida sobre 1.991
-  documentos y 41 contenedores con recuperación automática instrumentada.
+  documentos y 40 contenedores con recuperación automática instrumentada.
 site_author: Miquel Blanch
 
 theme:

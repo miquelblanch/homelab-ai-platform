@@ -1,6 +1,6 @@
 # Homelab AI Platform
 
-Una plataforma de IA autoalojada sobre un único Mac Mini M4 Pro: un agente de Telegram con enrutado de modelos por coste (a través de Hermes Agent), un RAG de búsqueda híbrida sobre ~2.000 documentos, y 41 contenedores con recuperación automática instrumentada y verificada.
+Una plataforma de IA autoalojada sobre un único Mac Mini M4 Pro: un agente de Telegram con enrutado de modelos por coste (a través de Hermes Agent), un RAG de búsqueda híbrida sobre ~2.000 documentos, y 40 contenedores con recuperación automática instrumentada y verificada.
 
 **📖 [Leer el caso de estudio completo →](https://miquelblanch.github.io/homelab-ai-platform/)**
 
