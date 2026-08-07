@@ -1,22 +1,10 @@
 # Homelab AI Platform
 
-Una plataforma de IA autoalojada sobre un único Mac Mini M4 Pro: un agente de Telegram con enrutado de modelos por coste (a través de Hermes Agent), un RAG de búsqueda híbrida sobre ~2.000 documentos, y 40 contenedores con recuperación automática instrumentada y verificada.
+Infraestructura personal autoalojada en casa, sobre un único Mac Mini M4 Pro: **40 contenedores Docker** que cubren red, domótica, media, productividad, fotos y monitorización, más un agente conversacional por Telegram que los opera y un RAG que indexa mis propios documentos. Da servicio a mi día a día, pero está construida y operada con las prácticas que aplicaría a un sistema en producción — instrumentada, testeada, documentada.
 
 **📖 [Leer el caso de estudio completo →](https://miquelblanch.github.io/homelab-ai-platform/)**
 
 ---
-
-## La versión corta
-
-Instrumentando el pipeline de métricas, tres indicadores que llevaban meses en verde resultaron medir algo distinto de lo que prometía su etiqueta:
-
-| Indicador | Lo que parecía decir | Lo que medía en realidad |
-| --- | --- | --- |
-| Recuperación automática: 100% de éxito | los reinicios arreglan el problema | que `docker restart` devolvió 0 |
-| Ratio de salud de contenedores | proporción de contenedores sanos | todo lo que no estaba roto explícitamente |
-| Relays 5/5 | los nueve relays funcionan | cinco comprobaciones pasan, tres sin relación |
-
-Ninguno estaba roto. Ninguno medía lo que prometía. Cerrar esa distancia es de lo que va este proyecto.
 
 ## Qué hay aquí
 
