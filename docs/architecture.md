@@ -97,6 +97,99 @@ flowchart TB
 
 ---
 
+## Los contenedores
+
+El diagrama de arriba colapsa la mayoría de esto en una sola caja. Desplegado,
+es bastante más heterogéneo de lo que sugiere un rectángulo — útil de ver de
+un vistazo cuánto convive en una sola máquina.
+
+### Red y borde
+
+| Contenedor | Qué hace |
+| --- | --- |
+| Traefik | Proxy inverso. Enruta el tráfico entrante hacia el contenedor correcto por dominio |
+| Pangolin | Expone servicios seleccionados a internet a través de un túnel, sin abrir puertos en el router |
+| Gerbil | El extremo del túnel que habla con Pangolin — el componente que de verdad mantiene la conexión saliente |
+| CrowdSec | Detecta patrones de abuso en los logs de Traefik y alimenta un bloqueo compartido |
+| DDNS a Cloudflare | Mantiene el registro DNS apuntando a la IP pública, que cambia |
+| Sincronización de AdGuard | Mantiene en paridad la configuración entre los dos resolvers DNS de la red |
+
+### Domótica
+
+| Contenedor | Qué hace |
+| --- | --- |
+| Home Assistant | La plataforma de domótica en sí — automatizaciones, integraciones, panel de control |
+| Zigbee2MQTT | Puente entre el coordinador Zigbee y el resto del sistema, vía MQTT |
+| Matter Server | Soporte del protocolo Matter para los dispositivos que lo hablan |
+| Mosquitto | El broker MQTT sobre el que se comunican Home Assistant y Zigbee2MQTT |
+
+### Multimedia
+
+| Contenedor | Qué hace |
+| --- | --- |
+| Jellyfin (vídeo) | Streaming de la videoteca |
+| Jellyfin (audio) | Streaming de música, como instancia separada de la de vídeo |
+| Audiobookshelf | Audiolibros y podcasts, con seguimiento de progreso |
+| qBittorrent | Cliente de descargas |
+
+### Productividad y colaboración
+
+| Contenedor | Qué hace |
+| --- | --- |
+| Nextcloud | Ficheros, calendario, tareas — el servidor de colaboración |
+| Base de datos de Nextcloud | MariaDB dedicada a esa instancia |
+| Caché de Nextcloud | Redis para sesiones y caché de la aplicación |
+| Puente de calendario | Sincroniza eventos por CalDAV con el agente conversacional |
+| Syncthing | Sincronización de ficheros entre dispositivos, sin depender de un servidor central |
+| Stirling PDF | Herramientas de manipulación de PDF con interfaz web |
+| n8n | Automatización de flujos de trabajo entre servicios |
+| Open WebUI | Interfaz de chat para hablar con los modelos locales y en la nube |
+| Vaultwarden | Gestor de contraseñas, compatible con el protocolo de Bitwarden |
+
+### Creatividad
+
+| Contenedor | Qué hace |
+| --- | --- |
+| Excalidraw | Pizarra colaborativa para diagramas a mano alzada |
+| Minipaint | Editor de imágenes ligero, en el navegador |
+
+### Fotos
+
+| Contenedor | Qué hace |
+| --- | --- |
+| Immich (servidor) | Gestión y backup de fotos y vídeo desde el móvil |
+| Immich (aprendizaje automático) | Reconocimiento facial y de objetos sobre la biblioteca |
+| Immich (base de datos) | PostgreSQL con la extensión vectorial que usa el reconocimiento |
+| Immich (caché) | Redis para tareas en cola y caché |
+
+### Búsqueda y conocimiento
+
+| Contenedor | Qué hace |
+| --- | --- |
+| Motor de búsqueda híbrida | El servicio descrito en la sección siguiente |
+| Base de datos del motor | PostgreSQL con pgvector, dedicada a los embeddings |
+
+### Observabilidad y estado del proyecto
+
+| Contenedor | Qué hace |
+| --- | --- |
+| Beszel | CPU, memoria y disco de las máquinas de la red, con panel propio |
+| Agente de Beszel | Se instala en cada máquina vigilada y reporta al servidor central |
+| Proxy hacia el socket de Docker | Da a Beszel visibilidad de los contenedores sin exponerle el socket directamente |
+| Speedtest Tracker | Mide la conexión a intervalos regulares y guarda el histórico |
+| Homepage | Página de inicio con accesos directos a todo lo demás |
+| Panel del proyecto | El dashboard de este propio proyecto de monitorización |
+| Proxy del panel del proyecto | Mismo patrón que el proxy del recolector de métricas |
+| Servicio de alertas | Punto de entrada común al que el resto de monitores puede mandar avisos |
+
+### Parado a propósito
+
+| Contenedor | Qué hace |
+| --- | --- |
+| Grabador de vídeo de cámaras | Apagado de forma intencionada — las cámaras físicas están desconectadas. Su histórico de reinicios aparece igualmente en la distribución de incidentes: ver [Fiabilidad](case-studies/reliability.md) |
+
+---
+
 ## El agente (Hermes Agent)
 
 ### Qué es y por qué no está en un contenedor
@@ -251,6 +344,26 @@ La segunda capa merece una explicación. No comprueba que un contenedor esté co
 La tercera capa importa más de lo que parece a primera vista. **Todos los monitores locales comparten un modo de fallo**: si la máquina se apaga, se cuelga, o pierde la red, se apaga también aquello que iba a avisarte. El observador externo, corriendo en hardware distinto, es el único componente capaz de reportar el fallo total de todo lo demás.
 
 Y plantea la pregunta inversa, que no tiene respuesta limpia: **¿quién vigila al que vigila?** Si esa segunda máquina cae, dejas de recibir alertas y el silencio es indistinguible de la normalidad. La mitigación parcial es que el informe diario del servidor principal seguiría llegando por su cuenta.
+
+### Cada monitor, uno por uno
+
+La tabla de arriba agrupa por capa; esta es la lista concreta de qué corre y
+con qué cadencia.
+
+| Qué hace | Cada |
+| --- | --- |
+| Vigila los contenedores: en pie, consumo, salud real cuando la tienen declarada; reinicia los que puede reiniciar solo | 5 min |
+| Comprueba que las propias tareas programadas y monitores siguen vivos | 5 min |
+| Envía un latido al observador externo | 5 min |
+| Revisa las integraciones de domótica: la API responde, el puente Zigbee está conectado, los sensores siguen reportando, las baterías no están agotadas | 15 min |
+| Vigila el resolver DNS primario | 15 min |
+| Genera un volcado coherente de cada base de datos y copia el disco de datos completo al volumen en espejo | diaria |
+| Verifica la integridad del backup de la noche anterior — trece comprobaciones | diaria |
+| Reindexa incrementalmente la base de conocimiento | diaria |
+| Envía el informe de estado del día | diaria |
+| Envía la agenda del día, si hay eventos | diaria |
+| Agrega y purga las métricas antiguas | semanal |
+| Actualiza las imágenes de los contenedores, con rollback automático si alguna no arranca | semanal |
 
 ### Alertas solo en el cambio de estado
 
