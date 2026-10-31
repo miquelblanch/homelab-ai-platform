@@ -1,14 +1,14 @@
 # El agente
 
-> Un agente que opera infraestructura real desde Telegram, enrutando cada petición al modelo más barato que pueda resolverla — y las tres formas en que eso falló en silencio.
+> Un agente que opera infraestructura real desde Telegram — cómo el intento de hacerlo barato con un modelo local falló en silencio, y por qué al final el mejor diseño fue que nada esencial dependiera de él.
 
 ---
 
 ## Qué es
 
-Un agente conversacional al que se le escribe por Telegram. Puede responder preguntas, consultar la base de conocimiento, y **ejecutar acciones sobre la infraestructura**: listar contenedores, leer sus logs, reiniciar servicios, consultar el estado de la domótica, comprobar el espacio en disco.
+Un agente conversacional, construido sobre Hermes Agent, al que se le escribe por Telegram. Puede responder preguntas, consultar la base de conocimiento, y **ejecutar acciones sobre la infraestructura y la casa**: listar contenedores, leer sus logs, reiniciar servicios, consultar y mover la domótica, comprobar el espacio en disco.
 
-Corre además un puñado de tareas programadas sin supervisión, y una pasada nocturna que consolida su propia memoria.
+Corre además un par de tareas programadas, una pasada nocturna que consolida su propia memoria, y lo **despiertan** otros sistemas cuando hace falta criterio: tras un corte de luz, o ante una avería que nadie sabe arreglar todavía.
 
 ### Por qué Telegram
 
@@ -28,33 +28,29 @@ Corre como proceso nativo del sistema, gestionado por el planificador del sistem
 
 ---
 
-## Enrutado de modelos
+## Lo que el agente no hace
+
+La decisión más importante sobre el agente es lo que **dejó de hacer**.
+
+En la primera versión, el agente era el centro: generaba el informe diario del sistema, enviaba la agenda, vigilaba el espacio en disco, decidía qué reiniciar. Cada fallo del agente —un proveedor caído, una cuenta sin saldo, una actualización del runtime que rompía algo, un modelo que respondía mal— se llevaba por delante cosas que no tenían nada que ver con conversar.
+
+Hoy la regla es la contraria: **todo lo esencial es código determinista que corre sin él.** Vigilar, reparar, copiar, recuperarse de un corte de luz, avisar y escribir el informe de la mañana no necesitan un modelo de lenguaje, así que no lo usan. El agente entra cuando hace falta criterio, y si se cae, se pierde la conversación y poco más.
+
+Las páginas siguientes cuentan cómo se llegó ahí, porque el camino es más instructivo que el destino.
+
+---
+
+## La historia del enrutado de modelos
 
 ### La aritmética
 
-La razón de que exista enrutado es de coste, y conviene ponerle números aproximados.
+El primer diseño tenía enrutado de modelos por coste, y conviene ponerle números aproximados al porqué.
 
 Una conversación interactiva son unas pocas peticiones al día. Aunque cada una arrastre bastante contexto, el total mensual es despreciable con cualquier proveedor.
 
 Una tarea programada es otra cosa. Corre a horas fijas, lleva su contexto de sistema completo, encadena varias llamadas a herramientas, y **nadie la mira**. Multiplicado por varias tareas y treinta días, ya no es despreciable. Y sobre todo: es un gasto que crece solo, sin que ninguna acción tuya lo dispare.
 
-De ahí la regla: **lo automático va a local por defecto; se sube a la nube solo lo que demuestre que lo necesita.**
-
-### El reparto actual
-
-| Carga de trabajo | Backend | Motivo |
-| --- | --- | --- |
-| Chat interactivo | Modelo cloud | Hay un humano esperando; manda la calidad |
-| Tareas de **una** llamada a herramienta | `qwen3.5-9b` local | Coste cero, y es capaz |
-| Tareas **multi-tool** | Modelo cloud | El local no puede — ver abajo |
-
-El modelo local se sirve desde LM Studio, que expone una API compatible con OpenAI en el loopback. El enrutado no está en el modelo: está en la configuración, con un **pin por tarea**. El modelo por defecto es el cloud, y las tareas concretas que van a local lo declaran explícitamente.
-
-Esa asimetría es intencionada. Si añado una tarea nueva y me olvido de configurarla, hereda el cloud: funciona y cuesta dinero. Al revés heredaría el local: funcionaría a veces y fallaría en silencio, que es mucho peor.
-
----
-
-## El incidente que forzó todo esto
+De ahí la regla de entonces: **lo automático va a local por defecto; se sube a la nube solo lo que demuestre que lo necesita.** El modelo local era `qwen3.5-9b`, servido desde LM Studio en el loopback, con un pin por tarea en la configuración.
 
 ### Los crons dejaron de funcionar de golpe
 
@@ -69,7 +65,7 @@ last_error: "RuntimeError: HTTP 402: Insufficient Balance"
 
 Un 402 es un error honesto y ruidoso, así que esta parte se diagnosticó en minutos.
 
-### La parte interesante: el fallback no salvó nada
+### El fallback no salvó nada
 
 La configuración tenía un fallback a local. Si el proveedor cloud falla, se supone que las tareas caen al modelo local y siguen funcionando.
 
@@ -79,23 +75,11 @@ Un servidor de inferencia sin modelo cargado responde a la comprobación de salu
 
 Es el mismo patrón que recorre este proyecto entero, aplicado a otra capa: **algo que parece disponible porque responde, pero que no puede hacer su trabajo.**
 
-### Lo que se arregló
-
-**El modelo se carga al arrancar la máquina**, mediante un servicio del sistema que levanta el servidor de inferencia y carga explícitamente el modelo. Es idempotente, tiene reintentos, y avisa por Telegram si no lo consigue.
-
-**El contexto tuvo que subirse a 64K.** Hermes Agent exige un mínimo de 64.000 tokens de contexto, y el valor por defecto de LM Studio era de unos 24.800. Con ese ajuste el modelo cargaba correctamente y después fallaba al usarse, con un error que no apuntaba al contexto.
-
-**Las tareas simples se fijaron a local** de forma explícita, en vez de depender de un fallback. Un fallback es un mecanismo de emergencia; si quieres que algo corra en local, dilo.
-
----
-
-## Dónde deja de servir un modelo de 9B
-
-### El síntoma
+### Dónde deja de servir un modelo de 9B
 
 Al pasar las tareas a local, unas funcionaron perfectamente y otras no. El patrón tardó en verse porque **no fallaban: entregaban algo**.
 
-Las tareas que hacen **una sola llamada a herramienta** —consultar el disco, ejecutar un script y resumir la salida— funcionan con el modelo local sin ningún problema.
+Las tareas que hacen **una sola llamada a herramienta** —consultar el disco, ejecutar un script y resumir la salida— funcionaban con el modelo local sin ningún problema.
 
 Las tareas **multi-tool**, que encadenan varias llamadas y deciden la siguiente en función del resultado de la anterior, devolvían esto en el log del runtime:
 
@@ -107,8 +91,6 @@ El modelo ejecutaba las herramientas correctamente. Recibía los resultados. Y d
 
 El resultado que llega a Telegram es del estilo *"ahora consultaré el estado de los contenedores y prepararé un resumen"*. En vez del resumen.
 
-### Por qué es peligroso
-
 Enumerando el modo de fallo:
 
 - La tarea **termina con código de salida 0**
@@ -119,39 +101,15 @@ Enumerando el modo de fallo:
 
 Si lees ese mensaje por encima a las tres de la mañana, parece que funcionó. Y si la tarea es un resumen diario del estado del sistema, un mensaje que dice "voy a revisar el sistema" se parece bastante a un mensaje que dice que el sistema está bien.
 
-### Lo que se intentó antes de rendirse
+**No se arregla por prompt.** Aun exigiendo de forma explícita una frase-resumen final, la respuesta seguía vaciándose tras las llamadas a herramientas. El mismo prompt, la misma tarea y las mismas herramientas contra el modelo cloud entregaban una respuesta limpia. Es una limitación del modelo manteniendo coherencia a lo largo de una secuencia larga de intercambios con herramientas — el tipo de límite que no aparece en ningún benchmark. Un banco de pruebas mide si el modelo sabe usar una herramienta; no mide si aguanta la sexta.
 
-Lo primero que uno prueba es arreglarlo con el prompt: pedir explícitamente una frase de resumen al final, insistir en que devuelva el resultado y no el plan, estructurar la instrucción de otra manera.
+### Cómo terminó
 
-**No se arregla por prompt.** Aun exigiendo de forma explícita una frase-resumen final, la respuesta sigue vaciándose tras las llamadas a herramientas. El mismo prompt, la misma tarea y las mismas herramientas contra el modelo cloud entregan una respuesta limpia.
+La regla resultante fue *local para una sola herramienta, cloud para varias*. Duró poco, porque la pregunta siguiente era obvia: **¿las tareas de una sola herramienta necesitaban un modelo?**
 
-No es un problema de instrucciones. Es una limitación del modelo manteniendo coherencia a lo largo de una secuencia larga de intercambios con herramientas, y ningún ajuste de prompt lo compensa.
+No. Eran "consulta esto y resúmelo", y un resumen de un estado conocido se escribe mejor con código: siempre igual, siempre completo, sin coste y sin forma de narrar en lugar de hacer. Una a una, salieron del agente — el informe diario, la agenda, la vigilancia del disco. Cuando el modelo local se quedó sin trabajo, salió de la máquina y liberó la memoria que ocupaba.
 
-### La regla resultante
-
-**Modelo local: tareas de una sola llamada a herramienta. Modelo cloud: todo lo que encadene varias.**
-
-Es el tipo de límite que no aparece en ningún benchmark y que solo se encuentra dejando algo corriendo sin supervisión durante semanas. Un banco de pruebas mide si el modelo sabe usar una herramienta; no mide si aguanta la sexta.
-
----
-
-## Dos limitaciones que no se han resuelto
-
-Merece la pena enunciarlas porque son reales y siguen ahí.
-
-### El esfuerzo de razonamiento es global, no por proveedor
-
-Hermes Agent envía el mismo parámetro de `reasoning_effort` a todos los modelos. El modelo local no soporta el valor configurado y degrada silenciosamente a otro, emitiendo un aviso.
-
-Intentar acotarlo por proveedor —definirlo solo para el backend local— **no se respeta**: la configuración global gana. Y bajar el valor global degradaría también al modelo cloud, que es el que atiende las conversaciones interactivas.
-
-Se quedó como está. Es una limitación del runtime, no del diseño, y el coste real es pequeño; pero es exactamente la clase de detalle que uno descubre solo al mezclar dos proveedores con capacidades distintas.
-
-### Las tareas fijadas a local no tienen red de seguridad
-
-Al fijar explícitamente las tareas simples al modelo local, se renunció al fallback. Si el servidor de inferencia se cae, esas tareas fallan hasta que vuelva.
-
-El servicio del sistema lo recarga en cada arranque, pero **no es un watchdog**: no vigila que siga vivo durante el día. Es una decisión consciente —fallar de forma visible en una tarea auxiliar es aceptable— pero está sin resolver y conviene decirlo.
+Hoy el agente usa un modelo principal en la nube y una **reserva más barata** que entra sola si el principal falla —caída, clave, saldo— y **lo avisa por Telegram**. Las dos lecciones del 402 están aplicadas: hay un monitor que vigila el saldo de las cuentas antes de que se agote, y el fallback se anuncia en vez de esconderse.
 
 ---
 
@@ -159,47 +117,40 @@ El servicio del sistema lo recarga en cada arranque, pero **no es un watchdog**:
 
 ### Qué puede hacer
 
-Las herramientas del agente no son consultas a una API de juguete. Ejecutan comandos contra el sistema: listar el estado de los contenedores, leer las últimas líneas de log de uno concreto, reiniciarlo, consultar el espacio en disco, interrogar la API de domótica, buscar en la base de conocimiento.
+Las herramientas del agente no son consultas a una API de juguete. Ejecutan comandos contra el sistema: listar el estado de los contenedores, leer las últimas líneas de log de uno concreto, reiniciarlo, consultar el espacio en disco, interrogar y mover la domótica, buscar en la base de conocimiento.
 
 Es lo que hace útil al agente y lo que lo hace peligroso.
 
 ### La frontera entre actuar y preguntar
 
-Los contenedores están clasificados en tres categorías, y la clasificación **está en el código, no en el criterio del modelo**:
+La primera versión resolvía el peligro con listas: contenedores **críticos** —bases de datos, gestor de contraseñas, domótica, proxy inverso— sobre los que el sistema alertaba pero no tocaba nada; contenedores que **nunca** se tocaban; y el resto, que se reiniciaba solo. Que esa frontera viviera en una lista explícita y no en el juicio del modelo era deliberado: un modelo puede razonar muy bien sobre si conviene reiniciar una base de datos y equivocarse el día que el contexto le llega truncado.
 
-**Críticos** — bases de datos, gestor de contraseñas, domótica, proxy inverso. Sobre estos el sistema **alerta pero no toca nada**. El razonamiento es que un reinicio a ciegas de una base de datos con escrituras en vuelo puede convertir una incidencia menor en corrupción de datos.
+La frontera se ha movido, pero el principio sigue: **el modelo no decide qué puede hacer, solo si algo aplica.**
 
-**Nunca tocar** — contenedores apagados a propósito.
-
-**El resto** — reiniciar es casi siempre inocuo y casi siempre resuelve, así que se automatiza.
-
-Que esa frontera viva en una lista explícita y no en el juicio del modelo es deliberado. Un modelo de lenguaje puede razonar muy bien sobre si conviene reiniciar una base de datos y equivocarse el día que el contexto le llega truncado. Una lista no se equivoca.
+- La **remediación automática** tiene una lista cerrada de acciones reversibles —reiniciar un contenedor, reiniciar un servicio, rotar un log—. Un modelo lee la evidencia del episodio y responde una sola pregunta: ¿alguna de estas acciones lo resuelve? Si dice que no, no hay acción; si dice que sí, la acción se ejecuta **y se verifica**, con un cortacircuitos si se repite. Con esa verificación, reiniciar también los críticos resultó menos arriesgado que esperar a que alguien leyera el aviso.
+- Lo que no cabe en esa lista lo atiende el **Aprendiz**: la primera vez que aparece una avería guarda la evidencia y anota cómo se arregló; con eso propone una **receta**. **Las recetas las confirma una persona**, y solo una receta confirmada se aplica sola la vez siguiente. Ahí es donde el agente actúa: el Aprendiz lo despierta con la receta y la evidencia, el agente la ejecuta, y el Aprendiz comprueba si la alarma desapareció.
 
 ### Aprobación humana
 
-Para las acciones que sí requieren intervención, el patrón es escalar a Telegram con la información necesaria para decidir: qué se ha caído, desde cuándo, y las últimas líneas de log. La decisión la toma una persona.
+La aprobación humana no desapareció; se movió de sitio. Antes estaba en **cada incidente**: qué se ha caído, desde cuándo, las últimas líneas de log, decide tú. Eso escala mal, y en la práctica significa que una avería a las tres de la mañana espera a las ocho.
 
-La diferencia entre esto y un agente con permisos totales no es filosófica: es que el radio de impacto de una alucinación queda acotado a lo que el sistema ya considera reversible.
+Ahora está en **cada tipo de arreglo**: una persona confirma una vez cómo se arregla una clase de avería, y a partir de ahí se arregla sola, con verificación y con límite de intentos. El radio de impacto de una alucinación sigue acotado a lo que alguien ha considerado reversible, pero la persona deja de ser el cuello de botella.
 
 ---
 
-## Tareas programadas, y el fallo silencioso que aún queda
+## Las tareas programadas, y el fallo silencioso que se cerró
 
-### Qué corren
+### El problema
 
-Un resumen diario del estado del sistema, un digest de noticias, mantenimiento periódico de la base de conocimiento, y la consolidación de memoria nocturna. Cada una con su horario y su modelo fijado según la regla de arriba.
+Una de las tareas que corría en el modelo local vigilaba el espacio en disco y **solo respondía si algún disco superaba un umbral**. En condiciones normales no decía nada, y el runtime la registraba como ejecutada correctamente y silenciosa.
 
-### El problema que sigue abierto
+Ahí estaba el problema: **un resultado silencioso con estado `ok` no demuestra que la herramienta se llegara a ejecutar.** Un modelo que decide no llamar a la herramienta y responder directamente "todo correcto" produce exactamente la misma salida que uno que la ejecuta y comprueba que no hay nada que reportar. Y la ausencia de mensaje —que es la señal de que todo va bien— es también la señal de que nada se ha comprobado.
 
-Una de las tareas locales vigila el espacio en disco y **solo responde si algún disco supera un umbral**. En condiciones normales no dice nada, y el runtime la registra como ejecutada correctamente y silenciosa.
+### Cómo se cerró
 
-Ahí está el problema: **un resultado silencioso con estado `ok` no demuestra que la herramienta se llegara a ejecutar.**
+No haciendo que el modelo reportara siempre, sino quitándole la tarea. La vigilancia del disco es un monitor determinista con su propio latido: si deja de pasar, el latido envejece y la central de alarmas lo marca. **El silencio ahora significa fallo, no normalidad**, porque hay algo esperando activamente noticias suyas.
 
-Un modelo que decide no llamar a la herramienta y responder directamente "todo correcto" produce exactamente la misma salida que uno que la ejecuta y comprueba que no hay nada que reportar. El estado es `ok` en ambos casos. Y la ausencia de mensaje —que es la señal de que todo va bien— es también la señal de que nada se ha comprobado.
-
-Es, otra vez, el patrón de este repositorio entero: **un indicador en verde que mide una cosa distinta de la que promete.** En este caso el riesgo real es bajo, porque el monitor de contenedores también vigila los discos cada cinco minutos por su cuenta y no depende de ningún modelo. Pero esa mitigación es una casualidad afortunada, no un diseño.
-
-El arreglo correcto sería que la tarea reportase siempre, aunque fuera con una línea, de modo que el silencio significase fallo en lugar de normalidad. No está hecho.
+Lo que queda programado en el agente es lo que de verdad necesita un modelo: un digest de noticias, el mantenimiento de su propia memoria, y la purga periódica de lo borrado en la base de conocimiento.
 
 ---
 
@@ -207,35 +158,33 @@ El arreglo correcto sería que la tarea reportase siempre, aunque fuera con una 
 
 ### El problema
 
-El agente acumula notas y diarios cada día: decisiones tomadas, errores resueltos, configuraciones cambiadas. Sin ningún proceso que organice eso, en pocas semanas hay miles de anotaciones y ninguna forma de saber cuáles importan. Una libreta llena sin índice.
+El agente acumula notas cada día: decisiones tomadas, errores resueltos, configuraciones cambiadas. Sin ningún proceso que organice eso, en pocas semanas hay miles de anotaciones y ninguna forma de saber cuáles importan. Una libreta llena sin índice.
 
 Y el contexto de un modelo es finito: no se puede arrastrar todo indefinidamente.
 
 ### Cómo funciona
 
-Corre cada noche, en cinco fases:
+Corre cada noche, en tres fases:
 
-**1. Detección de repetición.** Lee los diarios de los últimos siete días y busca ideas, frases o hechos que aparezcan más de una vez en contextos distintos. La heurística es simple y sorprendentemente buena: si algo se menciona varias veces, probablemente importa.
+**1. Qué ha pasado.** Busca en las conversaciones del día los hechos, decisiones y temas que se repiten. La heurística es simple y sorprendentemente buena: si algo se menciona varias veces, en contextos distintos, probablemente importa.
 
-**2. Evaluación.** Los candidatos se envían a un modelo que puntúa cada uno de 0 a 1 según si merece recordarse indefinidamente. Puntúan alto las configuraciones, decisiones técnicas, rutas importantes y errores resueltos; puntúan bajo los saludos, las conversaciones triviales y lo que ya está anotado. **Solo pasan los que superan 0,6.**
+**2. Qué vale la pena.** Puntúa cada candidato. Puntúan alto las configuraciones, decisiones técnicas, rutas importantes y errores resueltos; puntúan bajo los saludos, las conversaciones triviales y lo que ya está anotado.
 
-**3. Promoción.** Los aprobados se escriben en el fichero de memoria a largo plazo, que es lo primero que el agente lee al arrancar.
+**3. Guardar.** Lo que supera el umbral se escribe en la memoria a largo plazo, que es lo primero que el agente lee al empezar una conversación, y todo lo que ha hecho queda en un registro aparte.
 
-**4. Archivado.** Los diarios de más de catorce días se mueven a una carpeta de archivo. Siguen existiendo, pero dejan de ocupar espacio en la memoria activa.
+La primera versión era un script con su propio modelo local y su propio índice de búsqueda; hoy lo hace el propio agente siguiendo unas instrucciones escritas. No manda mensaje: su resumen aparece en el informe de la mañana, y si una noche no corre, el informe lo dice.
 
-**5. Reindexado.** Se actualiza el índice de búsqueda semántica para que lo nuevo sea recuperable en lenguaje natural.
+### Por qué fue la tarea que más problemas dio
 
-### Por qué es la tarea que más problemas dio
+Es multi-tool por naturaleza: lee, evalúa, escribe. Fue la primera en manifestar el problema del modelo local narrando en vez de ejecutar, y la razón por la que se investigó ese comportamiento a fondo.
 
-Es multi-tool por naturaleza: lee, evalúa, escribe, archiva, reindexa. Fue la primera en manifestar el problema del modelo local narrando en vez de ejecutar, y la razón por la que se investigó ese comportamiento a fondo.
-
-El umbral de 0,6 es un parámetro sin justificar empíricamente. Se eligió a ojo y no se ha medido nunca cuántas promociones son acertadas. Es una de las cosas que un sistema de evaluación en condiciones debería responder.
+El umbral de promoción sigue sin justificación empírica. Se eligió a ojo y no se ha medido nunca cuántas promociones son acertadas.
 
 ---
 
 ## Integración con la base de conocimiento
 
-El agente expone comandos dedicados que consultan el RAG desde Telegram, y también lo usa internamente cuando una pregunta necesita contexto que no está en la conversación.
+El agente consulta el RAG a través de un servidor MCP: desde Telegram con comandos dedicados, y también internamente cuando una pregunta necesita contexto que no está en la conversación.
 
 Lo relevante desde el punto de vista del agente es que la búsqueda en el corpus es **una herramienta más**: el modelo decide cuándo invocarla. Eso significa que la calidad de la respuesta depende de dos cosas encadenadas — que el modelo decida buscar, y que la búsqueda devuelva lo correcto — y que un fallo en cualquiera de las dos produce el mismo síntoma.
 
@@ -247,12 +196,12 @@ El motor de recuperación está descrito en [El RAG](rag.md).
 
 Esta es la sección que hace honesta a la página.
 
-**No hay evaluación cuantitativa de nada de lo anterior.** No hay un conjunto de casos de prueba, ni una métrica de acierto en la selección de herramientas, ni una comparación medida entre el modelo local y el cloud más allá de "uno entrega el resultado y el otro no".
+**No hay evaluación cuantitativa del agente.** No hay un conjunto de casos de prueba, ni una métrica de acierto en la selección de herramientas, ni una comparación medida entre modelos.
 
-La regla de reparto entre modelos —una tool call a local, varias a cloud— salió de observar fallos, no de medir un umbral. Es probable que el límite real no esté exactamente en dos llamadas, sino que dependa del tamaño del contexto acumulado, de la longitud de las salidas de las herramientas, o de ambas cosas. No lo sé, porque no lo he medido.
+La conclusión sobre el modelo de 9B —que se pierde a partir de la tercera o cuarta llamada encadenada— salió de observar fallos, no de medir un umbral. Es probable que el límite real dependa del tamaño del contexto acumulado o de la longitud de las salidas de las herramientas. No lo sé, porque no lo medí antes de retirarlo.
 
-El umbral de 0,6 de la consolidación de memoria no tiene ningún respaldo empírico.
+El umbral de la consolidación de memoria no tiene ningún respaldo empírico.
 
-Lo que sí hay es **un sistema en producción, con fallos reales documentados y sus causas identificadas**, que es una forma distinta de conocimiento y no un sustituto. La evaluación sistemática —casos dorados, métricas de recuperación, comparativas reproducibles— es el siguiente trabajo, y hasta que exista, todo lo de esta página son observaciones cualitativas hechas con cuidado.
+Lo que sí hay es medición **del sistema alrededor del agente**: cuánto se tarda en detectar y reparar cada avería provocada, y quién la reparó —Docker, el sistema, la remediación, el agente con una receta, o una persona—. Eso dice cuándo el agente es necesario, pero no cómo de bien hace su trabajo cuando lo es. La evaluación sistemática del agente en sí —casos dorados, comparativas reproducibles— sigue siendo trabajo pendiente, y hasta que exista, todo lo de esta página son observaciones cualitativas hechas con cuidado.
 
-Decirlo es preferible a fingir lo contrario. Un agente sobre el que se afirma que funciona bien, sin números que lo respalden, es exactamente lo que hay en la mayoría de los proyectos de esta categoría.
+Decirlo es preferible a fingir lo contrario.

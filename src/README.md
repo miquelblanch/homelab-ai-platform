@@ -57,6 +57,6 @@ Las credenciales se leen primero del entorno, después de `HOMELAB_SECRETS` y de
 
 ## Una advertencia
 
-Esto es una foto, no un espejo. Las copias que corren en el host son la fuente de verdad y divergirán de estas. Donde eso importa, la [documentación](../docs/) describe el comportamiento en lugar de los números de línea.
+Esto es una foto, no un espejo: la de finales de julio de 2026. Las copias que corren en el host son la fuente de verdad y han divergido de estas — por ejemplo, desde octubre los contenedores críticos también se reinician solos, y la decisión de qué acción aplica a cada avería vive en un proyecto aparte de diagnóstico y remediación. Donde eso importa, la [documentación](../docs/) describe el comportamiento actual en lugar de los números de línea.
 
 > Los comentarios del código están en castellano, igual que el resto del repositorio.

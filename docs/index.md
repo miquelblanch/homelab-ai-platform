@@ -2,19 +2,21 @@
 
 Una plataforma de IA autoalojada sobre un único Mac Mini M4 Pro. Da servicio a mi casa, pero está construida y operada con las prácticas que aplicaría a un sistema en producción: instrumentada, testeada, documentada y honesta sobre lo que hace mal.
 
-**40 contenedores. Un agente. 1.991 documentos indexados. Cero dependencias cloud para lo que importa.**
+**49 contenedores. Un agente del que no depende nada esencial. Unas 2.000 páginas indexadas. Cero dependencias cloud para lo que importa, y casi cien averías provocadas a propósito para comprobar que se recupera.**
 
 ---
 
 ## Qué hace
 
-**Un agente conversacional sobre Telegram.** Enruta cada petición a un `qwen3.5-9b` local o a un modelo cloud según la complejidad, ejecuta tareas programadas, consulta la base de conocimiento y opera la infraestructura — con aprobación humana obligatoria antes de tocar nada crítico.
+**Un agente conversacional sobre Telegram.** Consulta la base de conocimiento, opera la infraestructura y la casa, y entra en juego cuando hace falta criterio: tras un corte de luz o ante una avería sin receta conocida. Usa un modelo en la nube con una reserva más barata que entra sola si el principal falla. Todo lo esencial —vigilar, reparar, copiar, informar— funciona sin él.
 
-**Un RAG de búsqueda híbrida** sobre 1.991 documentos y 10.762 chunks. Búsqueda vectorial (HNSW) fusionada con búsqueda léxica (BM25) mediante reciprocal rank fusion. Los embeddings corren en local sobre `nomic-embed-text`.
+**Un RAG de búsqueda híbrida** sobre unas 2.080 páginas y 11.200 chunks. Búsqueda vectorial (HNSW) fusionada con búsqueda léxica (BM25) mediante reciprocal rank fusion. Los embeddings corren en local sobre `bge-m3`.
 
-**Infraestructura que se recupera sola.** Cada cinco minutos se revisan 40 contenedores y 3 discos. Los no críticos se reinician automáticamente y el reinicio **se verifica**; los críticos se escalan a un humano. Un cortacircuitos detiene el bucle cuando un contenedor empieza a caerse en cadena.
+**Infraestructura que se recupera sola.** Unos sesenta servicios propios vigilan contenedores, discos, relays, domótica, DNS y seguridad, y lo reúnen en una central de alarmas. Cada avería se repara sola cuando hay una acción segura para ella —el reinicio **se verifica**, no basta con que el comando devuelva 0— y un cortacircuitos detiene el bucle cuando algo empieza a caerse en cadena. Lo que se arregla a mano dos veces se convierte en receta.
 
-**Backups que se comprueban, no que se suponen.** Snapshot nocturno más nueve volcados de base de datos, seguidos de trece verificaciones de integridad a la mañana siguiente. El informe llega tanto si pasa como si falla.
+**Backups que se comprueban, no que se suponen.** Copia nocturna con un volcado coherente de cada base de datos, una segunda copia con historial y diecisiete verificaciones a la mañana siguiente. El informe llega tanto si pasa como si falla. Y se restauran de verdad, en ensayos guionizados.
+
+**Averías provocadas a propósito.** Un programa de antifragilidad con casi cien experimentos —de matar un contenedor a cortar Internet una hora o apagar el Mac de golpe— que mide cuánto se tarda en detectar y en reparar cada fallo, y convierte cada sorpresa en un arreglo.
 
 ---
 
@@ -68,6 +70,6 @@ Si solo vas a leer una página, lee **[Decisiones y errores](decisions.md)**. Es
 
 ## Restricciones que conviene conocer
 
-Esto es un sistema de un solo nodo, sin redundancia, sobre hardware de consumo y en una red doméstica plana. Está diseñado para una casa, no para una empresa. Varias decisiones que parecen raras —relays para alcanzar la LAN, un modelo local para las tareas programadas, SQLite en lugar de una base de datos de series temporales— salen directamente de esas restricciones, y cada una se argumenta donde aparece.
+Esto es un sistema de un solo nodo, sin redundancia, sobre hardware de consumo y en una red doméstica plana. Está diseñado para una casa, no para una empresa. Varias decisiones que parecen raras —relays para alcanzar la LAN, un proxy TCP delante del proxy inverso, SQLite en lugar de una base de datos de series temporales— salen directamente de esas restricciones, y cada una se argumenta donde aparece.
 
 Las direcciones, dominios y nombres de host que aparecen en esta documentación son ilustrativos.

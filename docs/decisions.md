@@ -2,7 +2,7 @@
 
 Las demás páginas describen un sistema que funciona. Esta va de cómo llegó hasta ahí, que fue bastante menos limpio.
 
-Está dividida en dos mitades. Arriba, decisiones que aguantaron, cada una con la condición bajo la cual dejaría de ser correcta. Abajo, once errores, con lo que costaron y lo que cambió.
+Está dividida en dos mitades. Arriba, decisiones, cada una con la condición bajo la cual dejaría de ser correcta — y una que llegó a esa condición. Abajo, trece errores, con lo que costaron y lo que cambió.
 
 ---
 
@@ -30,11 +30,13 @@ Prometheus y Grafana traerían descubrimiento automático de objetivos, un lengu
 
 *Rollback en torno a* diez nodos, o la primera vez que quiera reglas de alerta calculadas sobre las series en lugar de sobre las comprobaciones en crudo.
 
-### Modelo local para las tareas programadas, cloud para lo interactivo
+### Modelo local para las tareas programadas, cloud para lo interactivo — revertida
 
-El trabajo programado corre sin supervisión, a menudo, y arrastra contexto. Su coste tiene que ser cero o crece mientras nadie mira. El interactivo tiene a un humano esperando, así que manda la calidad y la latencia.
+El trabajo programado corre sin supervisión, a menudo, y arrastra contexto. Su coste tenía que ser cero o crecería mientras nadie miraba. El interactivo tiene a un humano esperando, así que manda la calidad y la latencia.
 
-*Rollback por tarea* — que es exactamente lo que pasó con las multi-tool, contado más abajo. La regla no es "local siempre"; es "local por defecto, y se sube lo que demuestre que lo necesita".
+*Rollback por tarea* — y el rollback llegó entero. Primero las tareas multi-tool volvieron a la nube, porque el modelo local fallaba en silencio (está en [Arquitectura](architecture.md)). Después, las de una sola herramienta dejaron de necesitar un modelo: eran informes que se escriben mejor con código determinista. Cuando el modelo local se quedó sin trabajo, salió de la máquina.
+
+Es la única decisión de esta lista que llegó a su condición de rollback, y la que más enseñó: la pregunta útil no era *qué modelo* para lo automático, sino *si lo automático necesitaba un modelo*.
 
 ### Los monitores nunca lanzan excepciones
 
@@ -142,7 +144,7 @@ Desarrollo completo en [Auditoría de seguridad](case-studies/security.md).
 
 Nunca supe qué lo arrancó. Y ese es el punto: **no hay ningún registro, porque nada estaba mirando.**
 
-**Qué cambió.** De momento solo la documentación, que ahora dice explícitamente que ese contenedor no tiene monitorización de ningún tipo y que conviene verificar su estado de vez en cuando. El arreglo bueno —una categoría que signifique *observar pero nunca actuar*, separada de *ignorar por completo*— está identificado y no construido.
+**Qué cambió.** Primero solo la documentación. Después llegó el arreglo bueno: la remediación tiene un **modo por contenedor** —*manual*, que observa, diagnostica y propone pero no actúa, y *automático*— separado por completo de la vigilancia, que ya no se salta a nadie. Y el inventario de cobertura comprueba para cada componente si tiene un estado esperado declarado, si alguien lo vigila y si un fallo llegaría al panel. La lista `NEVER_RESTART` sigue existiendo, vacía: el contenedor de las cámaras, su último miembro, volvió a estar siempre en marcha.
 
 **Lección:** las listas de exclusión confunden dos intenciones distintas. **"No actúes sobre esto" y "no mires esto" no son la misma instrucción**, y colapsarlas crea un punto ciego que además crece: cada elemento que añades a la lista por el primer motivo hereda gratis el segundo, y nadie lo nota porque la lista sigue teniendo el nombre del primero.
 
@@ -256,6 +258,36 @@ La consecuencia es que el respaldo dejó de ser un espejo y pasó a ser un acumu
 
 ---
 
+### Once días de aviso que nadie leyó
+
+**Qué monté.** El disco de backup era un espejo de dos discos, y como un espejo degradado se comporta exactamente igual que uno sano, añadí un comprobador que avisa por Telegram si el conjunto deja de estar completo. Era el remedio de libro para el modo de fallo de libro.
+
+**Qué pasó.** Uno de los discos, conectado por USB, cayó del conjunto. Lo reconstruí, di el asunto por cerrado, y ese mismo día volvió a quedar degradado. **Once días** funcionó con un solo disco.
+
+**Qué hizo el comprobador.** Exactamente su trabajo: avisó, y siguió registrando el estado degradado cada cinco minutos.
+
+**Por qué no sirvió.** Porque era un único mensaje, llegado el mismo día en que yo ya daba el problema por resuelto, y el registro cada cinco minutos solo lo veía quien fuera a buscarlo. Una alerta que nadie lee es indistinguible de una alerta que no existe.
+
+**Qué cambió.** El disco se retiró y el espejo desapareció del diseño (está en [Arquitectura](architecture.md)). Y cambió la forma de avisar: los monitores retienen las caídas que se arreglan solas en dos minutos y agrupan lo que cae a la vez, para que el aviso que importa no llegue enterrado. Hoy todo lo que está mal ahora mismo vive en una central de alarmas, no en el historial de un chat.
+
+**Lección:** el problema de los 49 reinicios —mensajes aislados que no disparan ninguna alarma mental— no es exclusivo de los mensajes de buenas noticias. Un sistema de alertas tiene que medirse también por **lo que el humano llega a leer**.
+
+---
+
+### El único aviso posible pasaba por la máquina apagada
+
+**Qué monté.** Un observador externo en otra máquina, precisamente para el caso que ningún monitor local puede cubrir: que el servidor entero se apague.
+
+**Qué pasaba en realidad.** Sus avisos no iban directos a Telegram. Iban a un pequeño servicio de alertas que los reenviaba… y que corría en el servidor. Con el servidor apagado, el observador detectaba la caída perfectamente y no podía contárselo a nadie.
+
+**Cómo salió a la luz.** No en una revisión, sino **provocando un apagón a propósito** y contando qué avisos llegaban y por dónde. Llegaron demasiados al volver, y ninguno durante el corte.
+
+**Qué cambió.** El observador tiene ahora una notificación directa, que no toca el servidor; y sus monitores del servidor están agrupados, de modo que un apagón produce un aviso al caer y otro al volver, no ocho.
+
+**Lección:** la independencia de un observador externo hay que comprobarla **en el camino de salida**, no solo en el de entrada. Y hay fallos que solo aparecen provocándolos: este llevaba ahí desde el primer día, y ninguna lectura de la configuración lo habría hecho evidente.
+
+---
+
 ## El patrón
 
 Releyendo todo esto, casi todos son el mismo error con distinta ropa.
@@ -290,4 +322,10 @@ Todos estos llevaban meses a la vista, en un informe que leo todas las mañanas.
 
 Cada punto de esta página lo encontró **una persona notando algo raro**. El escalón en la salud lo vi de refilón mirando una muestra. El push que no se enviaba lo pillé por tres palabras que faltaban en una línea. Los 49 reinicios aparecieron porque me puse a mirar una tabla por un motivo distinto.
 
-Ni uno solo lo cazó un sistema construido para cazarlo. Y construir ese sistema —comprobaciones de coherencia sobre las propias métricas, proporciones estables entre periodos, detección de series que se paran— es el siguiente trabajo obvio, y no está hecho.
+Ni uno solo lo cazó un sistema construido para cazarlo. Construir ese sistema era el siguiente trabajo obvio, y desde entonces se ha hecho en tres frentes:
+
+- **Coherencia.** Un comprobador que cruza cada hora las listas que deberían cuadrar —las rutas del proxy, los portales, los latidos, los servicios del sistema, lo que vigila el portal de seguridad— y avisa de lo que no cuadra.
+- **Inventario de cobertura.** Para cada componente, tres preguntas: ¿tiene un estado esperado declarado?, ¿lo vigila alguien?, ¿un fallo llegaría al panel? Lo que no tiene las tres respuestas es un hueco, aunque esté en verde.
+- **Antifragilidad.** Averías provocadas a mano, una a una, midiendo cuánto se tarda en detectar y en reparar cada una. Es la única forma de encontrar la clase de error de los dos últimos apartados, que no se ve leyendo configuraciones sino rompiendo cosas.
+
+El corolario sigue siendo incómodo, pero en otra dirección: los dos últimos errores de esta página no los encontró una persona notando algo raro. Los encontró un experimento.
