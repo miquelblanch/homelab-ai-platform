@@ -1,6 +1,6 @@
 # Homelab AI Platform
 
-Infraestructura personal autoalojada en casa, sobre un único Mac Mini M4 Pro: **40 contenedores Docker** que cubren red, domótica, media, productividad, fotos y monitorización, más un agente conversacional por Telegram que los opera y un RAG que indexa mis propios documentos. Da servicio a mi día a día, pero está construida y operada con las prácticas que aplicaría a un sistema en producción — instrumentada, testeada, documentada.
+Infraestructura personal autoalojada en casa, sobre un único Mac Mini M4 Pro: **49 contenedores Docker** que cubren red, domótica, media, productividad, fotos y monitorización, más un agente conversacional por Telegram que los opera y un RAG que indexa mis propios documentos. Da servicio a mi día a día, pero está construida y operada con las prácticas que aplicaría a un sistema en producción — instrumentada, testeada, documentada.
 
 **📖 [Leer el caso de estudio completo →](https://miquelblanch.github.io/homelab-ai-platform/)**
 
@@ -16,7 +16,7 @@ src/     el código operativo, saneado: monitorización, métricas,
 
 ## Stack
 
-Python 3.11, solo biblioteca estándar en los scripts operativos · Docker sobre OrbStack · SQLite · PostgreSQL con pgvector · Ollama (`nomic-embed-text`) · LM Studio (`qwen3.5-9b`) · DeepSeek · Hermes Agent · Home Assistant · Immich · Jellyfin · Nextcloud · Obsidian · Traefik · CrowdSec · Beszel · Uptime Kuma
+Python 3.11, solo biblioteca estándar en los scripts operativos · Docker sobre OrbStack · SQLite · PostgreSQL con pgvector · Ollama (`bge-m3`) · OpenAI con reserva en DeepSeek · Hermes Agent · Home Assistant · Frigate · Immich · Jellyfin · Nextcloud · Obsidian · HAProxy · Traefik · CrowdSec · Beszel · Uptime Kuma
 
 ## Levantar la documentación en local
 

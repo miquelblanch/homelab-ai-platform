@@ -215,7 +215,7 @@ Junto a las correcciones se añadieron tres cosas que sencillamente no existían
 
 **Protección contra fuerza bruta** con lista blanca de la red local, para que un error de contraseña desde casa no acabe bloqueándome a mí mismo.
 
-**Escaneo de vulnerabilidades sobre las imágenes de contenedor**, que antes no se hacía en absoluto. Las imágenes se actualizaban por costumbre, no porque nada avisara de que una tenía una vulnerabilidad conocida.
+**Escaneo de vulnerabilidades sobre las imágenes de contenedor**, que antes no se hacía en absoluto. Duró poco, y su retirada es una decisión tan válida como su introducción: casi todos los avisos eran de imágenes oficiales que no controlo, y la única acción posible ante ellos —actualizar— ya se hace cada semana de forma automática. Un control que produce avisos sobre los que no puedes actuar no te protege; te entrena a ignorarlos.
 
 **Un observador externo en hardware separado**, de modo que el fallo total del host principal sea siquiera detectable. Antes, si la máquina se apagaba, no había nada que pudiera decirlo.
 
@@ -257,7 +257,37 @@ No es un fallo de ejecución. Es **lo que una auditoría es**: una foto acotada 
 
 **Los sistemas derivan después de auditarlos.** Ese es el argumento definitivo a favor del script frente al informe: un script se puede volver a ejecutar. El informe describía abril. El script puede describir hoy.
 
-La ejecución semanal automatizada del script es el ítem que más lamento no haber terminado, precisamente por esto.
+La ejecución automatizada del script fue durante meses el ítem que más lamentaba no haber terminado, precisamente por esto. Se terminó, y creció bastante más allá del script (abajo).
+
+---
+
+## Lo que vino después: seguridad continua
+
+La auditoría era una foto. Lo que la sustituyó es un **portal de seguridad** con un recolector que corre cada treinta minutos y **solo lee**: no cambia configuración, no reinicia nada. Cada pasada produce una foto completa, la compara con la anterior y calcula una puntuación.
+
+### Qué mira
+
+| Área | Qué comprueba |
+| --- | --- |
+| La máquina | Cortafuegos y modo sigiloso, protección de integridad del sistema, SSH solo por clave, compartir pantalla, actualizaciones del sistema y de los paquetes |
+| Exposición | Qué puertos escuchan y para quién, qué contenedores publican puertos, y una **petición anónima a la API real** de cada servicio para ver si pide credenciales |
+| Desde Internet | La IP pública probada desde fuera: los dos puertos abiertos deben llevar al proxy inverso con su certificado, y **ninguno** de los más de cuarenta puertos de servicios internos debe responder |
+| El borde | Más de treinta pruebas de extremo a extremo: que cada portal responde desde casa y da 403 desde fuera, que el proxy ve la IP real, que el bloqueo compartido funciona |
+| Accesos | Intentos de login fallidos en cada servicio, desde casa y desde Internet, y patrones de fuerza bruta |
+| La red local | Cada aparato de la casa, por su dirección física: uno nuevo es un aviso hasta que alguien dice «es mío» |
+| Cambios | Todo lo que ha cambiado desde la foto anterior: un puerto nuevo, un contenedor que aparece, un servicio que se retira |
+
+Desde que el borde pasa la IP real al proxy, el bloqueo compartido tiene datos útiles: en el escaparate público, que es la única página abierta a Internet, algo más de la mitad del tráfico son bots, y el bloqueo lleva más de dieciséis mil direcciones vetadas.
+
+### Hallazgos que no se pueden ignorar en silencio
+
+Cada hallazgo que pide acción abre una tarea en la lista de pendientes del homelab, y la tarea se actualiza sola si el hallazgo cambia. Cerrarla sin arreglarlo no hace desaparecer el hallazgo. La única forma de quitarlo de la puntuación sin arreglarlo es **aceptar el riesgo** de forma explícita, con una nota obligatoria que explique por qué.
+
+Es la misma idea que el plan de la auditoría —un riesgo aceptado con su motivo escrito es una decisión; un riesgo que nadie ha enunciado es un descuido—, pero aplicada cada media hora en lugar de una vez.
+
+### Lo que lo hace distinto de la auditoría
+
+La auditoría de abril encontró 37 hallazgos y después se quedó quieta. El recolector encuentra cosas **porque el sistema cambia**: el aparato nuevo que se enchufó ayer, el puerto que abrió una actualización, el servicio que perdió el login tras recrearse. Su tasa de hallazgos no tiende a cero, y eso, por lo que se dijo en el marcador, es la señal sana.
 
 ---
 

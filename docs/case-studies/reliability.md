@@ -500,16 +500,16 @@ Ahora el cargador fusiona los valores por defecto en las claves ausentes y reesc
 
 Todo esto fue una tarde. Y la mayor parte no fue escribir código: fue leer datos que llevaban meses ahí sin que nadie los mirase.
 
-Sigue abierto:
+Lo que quedó abierto aquella tarde, y cómo está hoy:
 
-- **La causa raíz del contenedor** que consumió el 59% de las recuperaciones. Sabemos qué no era; no sabemos qué era.
-- **Cuatro relays sin cobertura** de monitorización de ningún tipo.
-- **Los latidos cubren una tarea** de las nueve programadas. El resto sigue dependiendo del descubrimiento, con el agujero que eso implica.
-- **No hay ninguna comprobación de consistencia** sobre la propia serie de métricas.
+| Abierto entonces | Hoy |
+| --- | --- |
+| La causa raíz del contenedor que consumió el 59% de las recuperaciones | Sigue sin conocerse. No ha vuelto a pasar, y si pasa, la evidencia se congela en el momento para poder investigarla después |
+| Cuatro relays sin cobertura de ningún tipo | Los 25 relays actuales se comprueban todos, cada pocos minutos, y cualquier fallo llega a la central de alarmas |
+| Los latidos cubrían una tarea de nueve | 36 tareas con latido, todas declaradas en el manifiesto; un latido rancio es una alarma |
+| Ninguna comprobación de consistencia sobre las propias métricas | Hay un comprobador de coherencia y un inventario de cobertura (abajo) |
 
-Ese último es el incómodo, y merece decirse en voz alta: **todos los problemas de esta página los encontró una persona notando algo raro.** El escalón en la salud lo vi de refilón mirando una muestra. El push que no se enviaba lo pillé por tres palabras que faltaban en una línea. Ninguno lo cazó un sistema diseñado para cazarlo.
-
-Una comprobación automática de coherencia —proporciones estables entre periodos, sin saltos inexplicados, sin series que se paran— habría detectado el primero y el segundo. No está construida, y es el siguiente paso obvio.
+Aquella tarde terminó con una frase incómoda: **todos los problemas de esta página los encontró una persona notando algo raro.** El escalón en la salud lo vi de refilón mirando una muestra. El push que no se enviaba lo pillé por tres palabras que faltaban en una línea. Ninguno lo cazó un sistema diseñado para cazarlo. La sección siguiente es lo que se construyó para cambiar eso.
 
 ---
 
@@ -520,3 +520,54 @@ Una comprobación automática de coherencia —proporciones estables entre perio
 **Un dato en verde no es un dato correcto.** Los tres indicadores llevaban meses en el informe diario, a la vista, todas las mañanas. Ninguno estaba roto. Cada uno medía algo real. Ninguno medía lo que su etiqueta prometía. Y precisamente porque estaban en verde, nadie los miró dos veces: el verde no es un estado que nadie investigue.
 
 **La monitorización por descubrimiento no ve las ausencias.** Es cómoda porque no hay lista que mantener y se adapta sola cuando añades componentes. Esa misma comodidad es lo que convierte la desaparición de un componente en silencio, y el silencio en un informe que dice `20/20`.
+
+---
+
+## Después de aquella tarde
+
+Los tres hallazgos tenían la misma forma: un indicador que nadie cuestionaba porque estaba en verde. Lo que vino después fueron cuatro piezas, cada una pensada para encontrar esa forma sin que haga falta tener suerte.
+
+### Una central de alarmas, en vez de un chat
+
+Los avisos de Telegram son un historial: dicen lo que **pasó**. Lo que hacía falta era un sitio que dijera lo que **está mal ahora**. Todos los monitores escriben su estado, y una central de alarmas en el panel de vigilancia los reúne: contenedores, latidos, relays, domótica, discos, servicios del sistema, tareas del agente, coherencia, seguridad. Una alarma desaparece cuando el problema desaparece, no cuando alguien lee el mensaje.
+
+Es la diferencia entre el espejo degradado que avisó una vez y siguió once días así (está en [Decisiones y errores](../decisions.md)) y un sistema donde ese estado se queda en rojo hasta que se arregla.
+
+### Remediación con evidencia, y un Aprendiz
+
+El healer de reinicios verificados creció en dos direcciones.
+
+**Hacia más tipos de avería.** La remediación tiene ahora una lista cerrada de acciones reversibles —reiniciar un contenedor, reiniciar un servicio del sistema, rotar un log que crece sin control— y para cada episodio congela la evidencia (estado, logs, eventos de Docker, historial de reinicios) y pregunta a un modelo una sola cosa: **¿alguna de estas acciones lo resuelve?** El modelo no decide qué puede hacer; solo si algo de la lista aplica, y por qué. Si dice que no, el motivo queda escrito: «el contenedor no arrancó porque Docker no pudo acceder al disco del montaje; reiniciarlo no lo resolvería» es un diagnóstico, no un fallo de la remediación.
+
+**Hacia lo que no está en la lista.** El Aprendiz vigila la central de alarmas. La primera vez que aparece una avería guarda las pruebas al aparecer y al resolverse, y anota cómo se arregló; con eso propone una **receta**, que confirma una persona. La vez siguiente, con la receta confirmada, despierta al agente para que la aplique, comprueba si la alarma desaparece, y respeta un cortacircuitos de tres intentos al día.
+
+El cortacircuitos tuvo su propia lección: durante las pruebas de antifragilidad se abría con reparaciones *correctas*, porque contaba igual un arreglo que funcionó que uno que no. Ahora lo que se repara durante un experimento no cuenta, y el mensaje dice «se ha caído N veces» en vez de «ha fallado».
+
+### Coherencia e inventario
+
+**Coherencia** cruza cada hora las listas que deberían cuadrar entre sí: las rutas del proxy inverso, los portales de la página de inicio, lo que vigila el portal de seguridad, los latidos esperados, los servicios del sistema cargados, los contenedores. Un portal nuevo sin ruta, un latido declarado de una tarea que ya no existe, un destino del proxy donde no escucha nadie: cada uno es un aviso. Las excepciones a propósito se escriben en un fichero, con su porqué.
+
+**El inventario de cobertura** hace a cada componente —contenedores, servicios, entidades de la domótica, tareas, relays— tres preguntas: ¿tiene un **estado esperado declarado**?, ¿lo **vigila** alguien?, ¿un fallo **llegaría al panel**? Lo que no responde a las tres es un hueco aunque esté en verde. Es la versión sistemática de la pregunta que destapó los relays: *cinco de qué*.
+
+### Antifragilidad: romperlo a propósito
+
+Todo lo anterior responde a «¿se vería este fallo?». No responde a «¿qué pasa de verdad cuando ocurre?». Para eso hay un programa de **averías provocadas**: un catálogo de algo más de cien experimentos en cinco niveles, de matar un contenedor a cortar Internet una hora o apagar el Mac de golpe, que se provocan **a mano, uno a uno** —nunca un orquestador automático—, con la familia avisada cuando afectan a sus servicios.
+
+Cada ejecución mide cuánto se tardó en **detectar**, cuánto en **reparar**, y **quién** reparó: Docker, el sistema operativo, la remediación, el Aprendiz con una receta, el guion de arranque, nadie porque el sistema aguantó, o una persona. Una reparación humana puntúa poco aunque sea rápida: el objetivo es que no haga falta.
+
+En los primeros seis días hubo **154 ejecuciones sobre 101 experimentos**, y quedaron **56 aprendizajes** escritos. Unos cuantos que dicen más que el índice:
+
+| Experimento | Lo que se esperaba | Lo que pasó |
+| --- | --- | --- |
+| Matar un contenedor con `docker kill` | Docker lo relanza | **Docker no relanza tras un kill a mano**: lo trata como parada voluntaria. Hicieron falta cuatro intentos —y ajustar márgenes, frecuencia y el cortacircuitos— para que se reparara solo en dos minutos |
+| Congelar un proceso con `kill -STOP` | Algo lo detecta | **Nadie lo vio.** Vivo para el sistema, sin latido, invisible. Hubo que añadir latidos a dos procesos que no los tenían |
+| Parar el panel de vigilancia | Se avisa y se repara | Hallazgo grave: la remediación llevaba **dos meses excluyendo** a tres contenedores, el panel incluido. Una vez, el modelo devolvió una respuesta mal formada; ese intento quedó «sin evaluar», y la regla que evita evaluar dos veces lo mismo no miraba la fecha: nunca caducaba. Y el Aprendiz, que lee la central, se quedaba ciego sin avisar |
+| Cortar Internet una hora | Lo local sigue funcionando | Lo local, perfecto. Pero las integraciones en la nube de la domótica cayeron y, al volver la conexión, un monitor mandó trece avisos de golpe de cosas que se arreglaron solas |
+| Apagar el Mac de golpe | Arranca y se recupera solo | **Cuatro intentos.** El primero tardó 19 minutos por una alarma vieja; el segundo encontró que el apagón dejaba bloqueada una aplicación; el tercero, que el disco de datos montaba tarde y una docena de servicios fallaban al arrancar sin él; el cuarto, todo en verde en algo más de tres minutos sin que nadie hiciera nada. Por el camino apareció que el observador externo no podía avisar durante el apagón |
+
+La última fila es el resumen de todo el programa: **cada experimento que sale mal es un arreglo que no habría existido**, porque ninguno de esos fallos se ve leyendo configuraciones. Solo aparecen rompiendo cosas.
+
+### La lección de fondo, otra vez
+
+La tarde de los tres hallazgos terminó diciendo que un dato en verde no es un dato correcto. Las averías provocadas añadieron la segunda mitad: **un sistema que se recupera en las pruebas que imaginaste no es un sistema que se recupera**. La única forma de saber si se recupera es hacerlo caer, de la forma más parecida posible a como caerá de verdad, y mirar qué llega, a quién y cuándo.
+

@@ -1,6 +1,6 @@
 # El RAG
 
-> Recuperación híbrida sobre 1.991 documentos de dos fuentes que no se parecen en nada. La parte difícil no fue la búsqueda: fue la ingesta.
+> Recuperación híbrida sobre unas 2.000 páginas de dos fuentes que no se parecen en nada. La parte difícil no fue la búsqueda: fue la ingesta.
 
 ---
 
@@ -13,7 +13,7 @@ Dos fuentes, deliberadamente distintas:
 | Vault de Obsidian | Notas personales en markdown, densamente enlazadas | ~550 documentos |
 | Nextcloud | Documentos ofimáticos, PDFs, hojas de cálculo | ~600 documentos |
 
-Total actual: **1.991 documentos y 10.762 chunks**.
+Total actual: **unas 2.080 páginas y 11.200 chunks**, todos con embedding: unas 640 páginas del vault y unas 1.440 del servidor de ficheros.
 
 La diferencia entre el número de documentos y el de chunks ya dice algo: un documento produce en media más de cinco fragmentos, y esa media está muy desequilibrada entre las dos fuentes.
 
@@ -25,7 +25,7 @@ La diferencia entre el número de documentos y el de chunks ya dice algo: un doc
 
 Sobre el mismo corpus corren dos búsquedas en paralelo.
 
-**Densa.** Cada fragmento está representado por un vector de 768 dimensiones, indexado con HNSW sobre pgvector. La consulta se convierte en vector y se buscan los vecinos más próximos por similitud de coseno. Captura significado: encuentra documentos que hablan de lo mismo aunque no compartan ni una palabra.
+**Densa.** Cada fragmento está representado por un vector de 1.024 dimensiones, indexado con HNSW sobre pgvector. La consulta se convierte en vector y se buscan los vecinos más próximos por similitud de coseno. Captura significado: encuentra documentos que hablan de lo mismo aunque no compartan ni una palabra.
 
 **Léxica.** Full-text de PostgreSQL con `tsvector`, rankeada con BM25. Busca las palabras literales, ponderando por frecuencia en el documento y rareza en el corpus.
 
@@ -55,17 +55,17 @@ Es un método sencillo, sin parámetros que ajustar más allá de `k`, y sorpren
 
 ## Embeddings locales
 
-Los embeddings se generan con Ollama sobre `nomic-embed-text`, 768 dimensiones, en la misma máquina.
+Los embeddings se generan con Ollama sobre `bge-m3`, 1.024 dimensiones, en la misma máquina.
 
 **La razón no es técnica.** El corpus contiene datos privados, así que las APIs de embeddings de terceros quedaron descartadas antes de evaluar ninguna. No se comparó calidad ni precio: no eran candidatas.
 
 Los costes de esa decisión son reales y conviene enunciarlos en vez de esconderlos:
 
-**Limita la elección de modelo** a lo que quepa en memoria junto con los 41 contenedores, el modelo de lenguaje y PostgreSQL. En la práctica eso significa modelos considerablemente más pequeños que los comerciales.
+**Limita la elección de modelo** a lo que quepa en memoria junto con los 49 contenedores y PostgreSQL. En la práctica eso significa modelos considerablemente más pequeños que los comerciales.
 
 **Hace que un reindexado completo sea una operación de horas**, no de minutos. Lo cual condiciona todo el diseño de la ingesta: si reprocesar todo fuera barato, el pipeline incremental que ocupa la mitad de esta página sería innecesario.
 
-**Fija la dimensionalidad para siempre.** Cambiar de modelo de embeddings implica reembeber el corpus entero y reconstruir el índice. No es una decisión reversible sin coste.
+**Fija la dimensionalidad.** Cambiar de modelo de embeddings implica reembeber el corpus entero y reconstruir el índice. No es una decisión reversible sin coste — y el coste se pagó: el primer modelo fue `nomic-embed-text`, de 768 dimensiones, y pasar a `bge-m3` supuso reindexarlo todo.
 
 ---
 
@@ -195,9 +195,11 @@ El coste es que un borrado real requiere un paso deliberado, y que el tamaño de
 
 ## Operación
 
-**Reindexado nocturno automático**: verifica que el servicio está en pie, procesa el vault, exporta lo modificado del servidor de ficheros, importa ambos, y **solo notifica si hay errores**.
+**Reindexado nocturno automático**: verifica que el servicio está en pie, procesa el vault, exporta lo modificado del servidor de ficheros, importa ambos, y deja un **latido** con lo que ha procesado — tanto si sale bien como si sale mal.
 
-Esa última decisión es discutible y ahora mismo la revertiría, por lo mismo que se explica en [Fiabilidad](reliability.md): notificar solo en el fallo hace que el silencio sea ambiguo entre "todo bien" y "el reindexado tampoco corrió".
+La primera versión solo notificaba si había errores, y eso hacía el silencio ambiguo entre "todo bien" y "el reindexado tampoco corrió", por lo mismo que se explica en [Fiabilidad](reliability.md). Con el latido, el silencio deja de ser una señal: si una noche no corre, el latido envejece y la central de alarmas lo marca. Y el reindexado **falla en voz alta** si el vault llega con cero notas o el servidor de ficheros no responde, en vez de dar por buena una pasada vacía.
+
+Eso último no es teórico. La copia del vault que se indexa vivía en una carpeta temporal que solo preparaba la sincronización manual, y que esta borraba al acabar. El reindexado nocturno no la preparaba. **Durante dos meses y medio importó cero notas del vault cada noche y terminó diciendo «OK»**: el índice conservaba las notas de la última sincronización manual, las búsquedas seguían devolviendo resultados, y nada parecía roto. Lo nuevo simplemente no entraba. Es el mismo error que [la tabla de métricas que dejó de recibir escrituras](../decisions.md): algo que se queda quieto se parece mucho a algo que va bien.
 
 **Sincronización manual** disponible como comando desde Telegram, que lanza el mismo proceso en segundo plano y confirma de inmediato. Existe porque cuando acabas de escribir una nota y quieres consultarla, esperar a las 04:45 no es una opción.
 
