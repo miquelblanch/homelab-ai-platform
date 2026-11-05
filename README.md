@@ -1,6 +1,6 @@
 # Homelab AI Platform
 
-Infraestructura personal autoalojada en casa, sobre un único Mac Mini M4 Pro: **49 contenedores Docker** que cubren red, domótica, media, productividad, fotos y monitorización, más un agente conversacional por Telegram que los opera y un RAG que indexa mis propios documentos. Da servicio a mi día a día, pero está construida y operada con las prácticas que aplicaría a un sistema en producción — instrumentada, testeada, documentada.
+Infraestructura personal autoalojada en casa, sobre un único Mac Mini M4 Pro: **50 contenedores Docker** que cubren red, domótica, media, productividad, fotos y monitorización, más un agente conversacional por Telegram que los opera y un RAG que indexa mis propios documentos. Da servicio a mi día a día, pero está construida y operada con las prácticas que aplicaría a un sistema en producción — instrumentada, testeada, documentada.
 
 **📖 [Leer el caso de estudio completo →](https://miquelblanch.github.io/homelab-ai-platform/)**
 
