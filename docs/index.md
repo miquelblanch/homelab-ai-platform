@@ -2,7 +2,7 @@
 
 Una plataforma de IA autoalojada sobre un único Mac Mini M4 Pro. Da servicio a mi casa, pero está construida y operada con las prácticas que aplicaría a un sistema en producción: instrumentada, testeada, documentada y honesta sobre lo que hace mal.
 
-**49 contenedores. Un agente del que no depende nada esencial. Unas 2.000 páginas indexadas. Cero dependencias cloud para lo que importa, y casi cien averías provocadas a propósito para comprobar que se recupera.**
+**50 contenedores. Un agente del que no depende nada esencial. Unas 2.000 páginas indexadas. Cero dependencias cloud para lo que importa, y casi cien averías provocadas a propósito para comprobar que se recupera.**
 
 ---
 
