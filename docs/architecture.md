@@ -10,7 +10,7 @@ Un Mac Mini M4 Pro con 64 GB de memoria unificada. Sin clúster, sin un segundo 
 
 La consecuencia práctica es que **la disponibilidad no viene de la redundancia sino de la velocidad de recuperación**. No hay forma de sobrevivir a que esta máquina se apague; lo único que se puede optimizar es cuánto se tarda en volver, y cuánto se pierde por el camino. De ahí que el esfuerzo esté puesto en backups verificados, en recuperación automática y en provocar averías a propósito para medir esa recuperación, y no en alta disponibilidad.
 
-También significa que cualquier cosa que instale compite por la misma memoria. El modelo de embeddings local, los 50 contenedores, PostgreSQL y un detector de objetos para las cámaras conviven en los mismos 64 GB. Durante meses también convivió un modelo de lenguaje local de 9B; salió de la máquina cuando quedó claro que no compensaba (está contado más abajo).
+También significa que cualquier cosa que instale compite por la misma memoria. El modelo de embeddings local, los 51 contenedores, PostgreSQL y un detector de objetos para las cámaras conviven en los mismos 64 GB. Durante meses también convivió un modelo de lenguaje local de 9B; salió de la máquina cuando quedó claro que no compensaba (está contado más abajo).
 
 ### macOS
 
@@ -74,7 +74,7 @@ flowchart TB
             ESC[Escudo · seguridad]
         end
 
-        APPS[50 contenedores · Immich, Jellyfin, Home Assistant, ...]
+        APPS[51 contenedores · Immich, Jellyfin, Home Assistant, ...]
         RELAY[25 relays socat hacia la LAN física]
     end
 
@@ -427,7 +427,7 @@ Cuatro volúmenes con papeles bien separados.
 
 **NVMe de datos — 2 TB, en caja externa.** Todo lo que está en uso:
 
-- Los volúmenes de los 50 contenedores: bases de datos, configuración y estado de Immich, Jellyfin, Nextcloud, Vaultwarden, la domótica y el resto
+- Los volúmenes de los 51 contenedores: bases de datos, configuración y estado de Immich, Jellyfin, Nextcloud, Vaultwarden, la domótica y el resto
 - La biblioteca de fotos y la de audio
 - El vault de notas
 - El propio proyecto del homelab: scripts, documentación, ficheros de estado y la base de datos de métricas
