@@ -75,7 +75,7 @@ flowchart TB
         end
 
         APPS[51 contenedores · Immich, Jellyfin, Home Assistant, ...]
-        RELAY[25 relays socat hacia la LAN física]
+        RELAY[26 relays socat hacia la LAN física]
     end
 
     subgraph ext["Otra máquina"]
@@ -193,7 +193,6 @@ Todos comparten el mismo login por portal y, salvo el escaparate, solo responden
 
 | Contenedor | Qué hace |
 | --- | --- |
-| Excalidraw | Pizarra para diagramas a mano alzada |
 | Minipaint | Editor de imágenes ligero, en el navegador |
 
 ---
@@ -317,7 +316,7 @@ Sin resolver esto, la plataforma de domótica no controla absolutamente nada.
 
 ### La solución
 
-**25 relays `socat`** corriendo de forma **nativa en el host**, fuera de Docker. Cada uno escucha en un puerto del anfitrión y reenvía todo el tráfico a la dirección y puerto de un dispositivo concreto de la LAN.
+**26 relays `socat`** corriendo de forma **nativa en el host**, fuera de Docker. Cada uno escucha en un puerto del anfitrión y reenvía todo el tráfico a la dirección y puerto de un dispositivo concreto de la LAN.
 
 El contenedor se configura para hablar con el host en ese puerto. El host habla con el aparato. Para el contenedor es transparente: cree que está hablando con el dispositivo.
 
@@ -337,7 +336,7 @@ Cuando un relay muere, Home Assistant no recibe ningún error útil. Simplemente
 
 El diagnóstico correcto —comprobar si el proceso del relay sigue vivo en el anfitrión— no es donde nadie mira primero.
 
-Cuando eran nueve, auditar su cobertura produjo uno de los hallazgos de este proyecto: varios no estaban monitorizados en absoluto, y la línea del informe diario que decía informar sobre ellos estaba contando otras cosas. Hoy un comprobador recorre los 25 cada pocos minutos —que el proceso viva y que el puerto responda— y cualquier fallo llega a la central de alarmas. Está desarrollado en [Fiabilidad](case-studies/reliability.md).
+Cuando eran nueve, auditar su cobertura produjo uno de los hallazgos de este proyecto: varios no estaban monitorizados en absoluto, y la línea del informe diario que decía informar sobre ellos estaba contando otras cosas. Hoy un comprobador recorre los 26 cada pocos minutos —que el proceso viva y que el puerto responda— y cualquier fallo llega a la central de alarmas. Está desarrollado en [Fiabilidad](case-studies/reliability.md).
 
 ---
 
