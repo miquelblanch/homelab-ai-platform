@@ -61,7 +61,7 @@ Los embeddings se generan con Ollama sobre `bge-m3`, 1.024 dimensiones, en la mi
 
 Los costes de esa decisión son reales y conviene enunciarlos en vez de esconderlos:
 
-**Limita la elección de modelo** a lo que quepa en memoria junto con los 49 contenedores y PostgreSQL. En la práctica eso significa modelos considerablemente más pequeños que los comerciales.
+**Limita la elección de modelo** a lo que quepa en memoria junto con los 51 contenedores y PostgreSQL. En la práctica eso significa modelos considerablemente más pequeños que los comerciales.
 
 **Hace que un reindexado completo sea una operación de horas**, no de minutos. Lo cual condiciona todo el diseño de la ingesta: si reprocesar todo fuera barato, el pipeline incremental que ocupa la mitad de esta página sería innecesario.
 

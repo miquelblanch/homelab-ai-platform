@@ -505,7 +505,7 @@ Lo que quedó abierto aquella tarde, y cómo está hoy:
 | Abierto entonces | Hoy |
 | --- | --- |
 | La causa raíz del contenedor que consumió el 59% de las recuperaciones | Sigue sin conocerse. No ha vuelto a pasar, y si pasa, la evidencia se congela en el momento para poder investigarla después |
-| Cuatro relays sin cobertura de ningún tipo | Los 25 relays actuales se comprueban todos, cada pocos minutos, y cualquier fallo llega a la central de alarmas |
+| Cuatro relays sin cobertura de ningún tipo | Los 26 relays actuales se comprueban todos, cada pocos minutos, y cualquier fallo llega a la central de alarmas |
 | Los latidos cubrían una tarea de nueve | 36 tareas con latido, todas declaradas en el manifiesto; un latido rancio es una alarma |
 | Ninguna comprobación de consistencia sobre las propias métricas | Hay un comprobador de coherencia y un inventario de cobertura (abajo) |
 
