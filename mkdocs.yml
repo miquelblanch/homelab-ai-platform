@@ -4,6 +4,7 @@ site_description: >-
   un RAG de búsqueda híbrida sobre unas 2.000 páginas y 51 contenedores que se
   vigilan, se reparan y se ponen a prueba con averías provocadas.
 site_author: Miquel Blanch
+site_url: https://miquel.cleverhans.es/
 
 theme:
   name: material
@@ -32,6 +33,42 @@ theme:
     - toc.follow
   icon:
     repo: fontawesome/brands/github
+
+plugins:
+  # Declaring plugins replaces MkDocs' implicit default, so search must be
+  # listed explicitly or it disappears.
+  - search
+  # Bilingual site: Spanish is the default (served at /), English at /en/.
+  # "suffix" structure: page.md is Spanish, page.en.md is its English
+  # translation. A page without .en.md falls back to the Spanish version,
+  # so translations can land page by page without breaking the build.
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
+      languages:
+        - locale: es
+          default: true
+          name: Español
+          build: true
+        - locale: en
+          name: English
+          build: true
+          site_description: >-
+            A self-hosted AI platform on a single Mac Mini: a Telegram agent,
+            a hybrid-search RAG over about 2,000 pages and 51 containers that
+            are monitored, self-repaired and stress-tested with deliberate
+            failures.
+          nav_translations:
+            Visión general: Overview
+            Arquitectura: Architecture
+            Casos de estudio: Case studies
+            El agente: The agent
+            El RAG: The RAG
+            Fiabilidad: Reliability
+            Auditoría de seguridad: Security audit
+            Decisiones y errores: Decisions and mistakes
 
 nav:
   - Visión general: index.md
