@@ -4,41 +4,34 @@ title: Un sitio bilingüe con dominio propio
 
 # Un sitio bilingüe con dominio propio
 
-**Proyecto:** P0 · **Fecha:** 21-11-2026 · **Horas:** _(rellenar)_
-
-!!! warning "Borrador"
-    Las respuestas de cada apartado las escribe Miquel con sus palabras. Las preguntas guía se borran al publicar.
+**Proyecto:** P0 · **Fecha:** 21-11-2026 · **Horas:** 4
 
 ## Qué he construido
 
-_Pregunta guía: si se lo contaras a un compañero de Grifols en dos frases, ¿qué es este sitio y cómo se publica?_
+Mi sitio personal de aprendizaje de proyectos como ingeniero de IA. Se publica en mi dominio `miquel.cleverhans.es`, que apunta a uno de mis repositorios en GitHub.
 
 ## Las piezas y por qué así
 
 ### Bilingüe con `mkdocs-static-i18n`
 
-_¿Qué hace la estructura `page.md` / `page.en.md` y qué pasa si falta una traducción? ¿Por qué un plugin y no dos sitios separados?_
+`page.md` tiene el contenido de la página y `page.en.md`, la versión traducida al inglés. Si falta la traducción, se muestra el original en español.
 
 ### Páginas generadas desde YAML con hooks de MkDocs
 
-_¿Qué es un hook, cuándo se ejecuta y qué ventaja tiene frente a escribir las tablas a mano o a un plugin externo?_
+El hook es un fichero en Python que MkDocs ejecuta al construir la web: lee los datos de `cursos.yaml`, escribe la tabla y la convierte en una página legible que se publica. Cuando cambio un dato del YAML, la página se regenera sola en los dos idiomas.
 
 ### Dominio propio: DNS, comodín y excepciones
 
-_¿Por qué `miquel.cleverhans.es` necesitó un CNAME en Cloudflare si ya había un comodín? ¿Por qué hizo falta además una reescritura en AdGuard? ¿Por qué la nube gris?_
+Tengo el comodín `*.cleverhans.es`, pero apunta a mi casa. Por eso no sirve: este subdominio tiene que apuntar a GitHub, y hace falta un CNAME explícito en Cloudflare que haga de excepción. Dentro de casa pasa lo mismo con el comodín de AdGuard, así que necesita su propia excepción.
 
 ### GitHub Pages con Actions
 
-_¿Por qué el fichero `CNAME` no bastó y hubo que poner el dominio en Settings → Pages?_
+`deploy.yml` construye la web, la empaqueta como un zip y se la entrega a GitHub, que la publica. Como GitHub no mira dentro del paquete para configurarse, el dominio hay que ponerlo en Settings → Pages: el fichero `CNAME` del repo no basta.
 
 ## Alternativas descartadas
 
-_Servir el sitio desde el homelab con nginx + Traefik. ¿Por qué no?_
+Servirlo desde el homelab. Lo hacemos en GitHub para que no dependa de mi entorno homelab: la idea es sacarlo de ahí.
 
 ## Lo que me sorprendió
 
-_¿Qué no esperabas? (Pista: `dig` contra tu AdGuard frente a `dig @1.1.1.1`.)_
-
-## Si lo volviera a hacer
-
-_Una cosa que harías distinta._
+Toda la planificación del proyecto de aprendizaje: un año para mejorar mis skills de AI Engineer.
