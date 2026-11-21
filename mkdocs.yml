@@ -1,8 +1,7 @@
-site_name: Homelab AI Platform
+site_name: Miquel Blanch · AI Engineering
 site_description: >-
-  Una plataforma de IA autoalojada en un solo Mac Mini: un agente de Telegram,
-  un RAG de búsqueda híbrida sobre unas 2.000 páginas y 51 contenedores que se
-  vigilan, se reparan y se ponen a prueba con averías provocadas.
+  Lo que construyo, mido y aprendo sobre AI Engineering: evals, RAG, agentes,
+  MCP y modelos locales, sobre un homelab real en un Mac Mini.
 site_author: Miquel Blanch
 site_url: https://miquel.cleverhans.es/
 
@@ -25,6 +24,7 @@ theme:
         icon: material/weather-sunny
         name: Cambiar a modo claro
   features:
+    - navigation.tabs
     - navigation.sections
     - navigation.top
     - navigation.tracking
@@ -56,14 +56,12 @@ plugins:
           name: English
           build: true
           site_description: >-
-            A self-hosted AI platform on a single Mac Mini: a Telegram agent,
-            a hybrid-search RAG over about 2,000 pages and 51 containers that
-            are monitored, self-repaired and stress-tested with deliberate
-            failures.
+            What I build, measure and learn about AI Engineering: evals, RAG,
+            agents, MCP and local models, on a real homelab on a Mac Mini.
           nav_translations:
+            Inicio: Home
             Visión general: Overview
             Arquitectura: Architecture
-            Casos de estudio: Case studies
             El agente: The agent
             El RAG: The RAG
             Fiabilidad: Reliability
@@ -71,14 +69,15 @@ plugins:
             Decisiones y errores: Decisions and mistakes
 
 nav:
-  - Visión general: index.md
-  - Arquitectura: architecture.md
-  - Casos de estudio:
+  - Inicio: index.md
+  - Homelab:
+      - Visión general: homelab.md
+      - Arquitectura: architecture.md
       - El agente: case-studies/agent.md
       - El RAG: case-studies/rag.md
       - Fiabilidad: case-studies/reliability.md
       - Auditoría de seguridad: case-studies/security.md
-  - Decisiones y errores: decisions.md
+      - Decisiones y errores: decisions.md
 
 markdown_extensions:
   - admonition
@@ -88,6 +87,11 @@ markdown_extensions:
   - toc:
       permalink: true
   - pymdownx.details
+  # Material's bundled icons (:material-...:, :fontawesome-...:) rendered as
+  # inline SVG at build time: no JS involved.
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
@@ -102,6 +106,8 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/miquelblanch
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/miquelblanch
   generator: false
 
 copyright: >-
