@@ -61,5 +61,4 @@ Este sitio recoge lo que construyo, cómo lo mido y lo que aprendo por el camino
 
 | Sección | Qué tendrá |
 | --- | --- |
-| **Learning log** | Qué he aprendido en cada pieza, por qué la hice así y qué alternativa descarté. |
 | **Case studies** | Un caso por proyecto, con números: evals de RAG, un servidor MCP, benchmarks de modelos locales y más. |
