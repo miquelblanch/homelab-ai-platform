@@ -7,19 +7,25 @@ site_url: https://miquel.cleverhans.es/
 
 theme:
   name: material
+  # Template overrides (language flags). HTML/Jinja only, no JS.
+  custom_dir: overrides
   language: es
+  font:
+    text: Inter
+    code: JetBrains Mono
+  # Colours are "custom" so docs/stylesheets/extra.css defines them.
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: teal
-      accent: teal
+      primary: custom
+      accent: custom
       toggle:
         icon: material/weather-night
         name: Cambiar a modo oscuro
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: teal
-      accent: teal
+      primary: custom
+      accent: custom
       toggle:
         icon: material/weather-sunny
         name: Cambiar a modo claro
@@ -78,6 +84,9 @@ nav:
       - Fiabilidad: case-studies/reliability.md
       - Auditoría de seguridad: case-studies/security.md
       - Decisiones y errores: decisions.md
+
+extra_css:
+  - stylesheets/extra.css
 
 markdown_extensions:
   - admonition
