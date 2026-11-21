@@ -31,6 +31,7 @@ theme:
         name: Cambiar a modo claro
   features:
     - navigation.tabs
+    - navigation.indexes
     - navigation.sections
     - navigation.top
     - navigation.tracking
@@ -76,6 +77,7 @@ plugins:
             Inicio: Home
             Cursos: Courses
             Progreso: Progress
+            Un sitio bilingüe con dominio propio: A bilingual site on its own domain
             Visión general: Overview
             Arquitectura: Architecture
             El agente: The agent
@@ -89,6 +91,9 @@ nav:
   - CV: cv.md
   - Cursos: cursos.md
   - Progreso: progreso.md
+  - Learning log:
+      - learning-log/index.md
+      - Un sitio bilingüe con dominio propio: learning-log/2026-11-21-sitio-publico.md
   - Homelab:
       - Visión general: homelab.md
       - Arquitectura: architecture.md
