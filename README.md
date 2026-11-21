@@ -1,30 +1,33 @@
 # Homelab AI Platform
 
-Infraestructura personal autoalojada en casa, sobre un único Mac Mini M4 Pro: **51 contenedores Docker** que cubren red, domótica, media, productividad, fotos y monitorización, más un agente conversacional por Telegram que los opera y un RAG que indexa mis propios documentos. Da servicio a mi día a día, pero está construida y operada con las prácticas que aplicaría a un sistema en producción — instrumentada, testeada, documentada.
+Self-hosted personal infrastructure on a single Mac Mini M4 Pro: **51 Docker containers** covering networking, home automation, media, productivity, photos and monitoring, plus a conversational agent on Telegram that operates them and a RAG that indexes my own documents. It serves my day-to-day life, but it is built and run with the practices I would apply to a production system: instrumented, tested, documented.
 
-**📖 [Leer el caso de estudio completo →](https://miquelblanch.github.io/homelab-ai-platform/)**
+**📖 [Read the full case study →](https://miquel.cleverhans.es/)** (Spanish by default, [English version](https://miquel.cleverhans.es/en/))
 
 ---
 
-## Qué hay aquí
+## What's here
 
 ```
-docs/    el caso de estudio, construido con Material for MkDocs
-src/     el código operativo, saneado: monitorización, métricas,
-         recuperación, retención, latidos y sus tests
+docs/    the case study, built with Material for MkDocs
+         (page.md = Spanish, page.en.md = English translation)
+src/     the operational code, sanitised: monitoring, metrics,
+         recovery, retention, heartbeats and their tests
 ```
 
 ## Stack
 
-Python 3.11, solo biblioteca estándar en los scripts operativos · Docker sobre OrbStack · SQLite · PostgreSQL con pgvector · Ollama (`bge-m3`) · OpenAI con reserva en DeepSeek · Hermes Agent · Home Assistant · Frigate · Immich · Jellyfin · Nextcloud · Obsidian · HAProxy · Traefik · CrowdSec · Beszel · Uptime Kuma
+Python 3.11, standard library only in the operational scripts · Docker on OrbStack · SQLite · PostgreSQL with pgvector · Ollama (`bge-m3`) · OpenAI with DeepSeek fallback · Hermes Agent · Home Assistant · Frigate · Immich · Jellyfin · Nextcloud · Obsidian · HAProxy · Traefik · CrowdSec · Beszel · Uptime Kuma
 
-## Levantar la documentación en local
+## Build the docs locally
 
 ```bash
 pip install -r requirements.txt
 mkdocs serve
 ```
 
-## Una nota final
+The site is bilingual through [mkdocs-static-i18n](https://github.com/ultrabug/mkdocs-static-i18n): Spanish is served at `/` and English at `/en/`. A page without an `.en.md` translation falls back to Spanish.
 
-Esto documenta un sistema que corre en un entorno privado. Las direcciones de red, dominios, nombres de host, mapeos de puertos y cualquier detalle sobre la superficie expuesta a internet están omitidos o son ilustrativos. El software se nombra; la topología no. La ingeniería es el objetivo; no el hacer un inventario de los elementos de la infraestructura.
+## A final note
+
+This documents a system running in a private environment. Network addresses, domains, host names, port mappings and any detail about the internet-facing surface are omitted or illustrative. The software is named; the topology is not. The engineering is the point, not an inventory of the infrastructure.

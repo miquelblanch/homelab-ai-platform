@@ -6,3 +6,5 @@
 # clones it in two years.
 mkdocs==1.6.1
 mkdocs-material==9.7.7
+# Bilingual build (es default, en): pure Python, no custom JS.
+mkdocs-static-i18n==1.3.1
