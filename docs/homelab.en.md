@@ -66,9 +66,6 @@ That is the thread running through this documentation: the gap between a system 
 
 If you only read one page, read **[Decisions and mistakes](decisions.md)**. It is the shortest, and the only one where things go wrong.
 
-!!! note "Translation in progress"
-    This English version is being translated page by page. Pages not yet translated are shown in Spanish.
-
 ---
 
 ## Constraints worth knowing
