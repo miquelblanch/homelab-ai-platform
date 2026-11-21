@@ -61,7 +61,6 @@ This site collects what I build, how I measure it and what I learn along the way
 
 | Section | What it will hold |
 | --- | --- |
-| **Courses** | Completed and in progress, with their progress. |
 | **Progress** | The skills map with each skill's current level and the evidence behind it. |
 | **Learning log** | What I learned in each piece, why I built it that way and which alternative I ruled out. |
 | **Case studies** | One per project, with numbers: RAG evals, an MCP server, local model benchmarks and more. |

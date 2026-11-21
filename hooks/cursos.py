@@ -1,0 +1,150 @@
+"""MkDocs hook: builds the courses page from data/cursos.yaml.
+
+Why a hook and not a plugin: hooks are a built-in MkDocs feature (a plain
+Python file listed under `hooks:` in mkdocs.yml), so there is no extra
+dependency to pin. The page keeps a `<!-- cursos -->` marker and this hook
+replaces it with tables at build time, in the language being built.
+"""
+
+from __future__ import annotations
+
+import html
+from pathlib import Path
+
+import yaml
+
+DATA = Path(__file__).resolve().parent.parent / "data" / "cursos.yaml"
+MARKER = "<!-- cursos -->"
+DONE = 98  # Udemy rarely reaches 100 %: >= 98 counts as completed.
+
+TEMAS = {
+    "llm": ("LLMs", "LLMs"),
+    "evals": ("Evals", "Evals"),
+    "agentes": ("Agentes", "Agents"),
+    "mcp": ("MCP", "MCP"),
+    "local": ("Modelos locales", "Local models"),
+    "finetuning": ("Fine-tuning", "Fine-tuning"),
+    "dl": ("Deep Learning", "Deep learning"),
+    "ml": ("Machine Learning", "Machine learning"),
+    "sdd": ("Spec-Driven Development", "Spec-Driven Development"),
+    "python": ("Python", "Python"),
+    "ingenieria": ("Ingeniería de software", "Software engineering"),
+    "sistemas": ("Sistemas", "Systems"),
+    "seguridad": ("Seguridad", "Security"),
+    "datos": ("Datos", "Data"),
+}
+
+TEXT = {
+    "es": {
+        "en_curso": "En curso",
+        "terminados": "Terminados",
+        "previstos": "Previstos en el roadmap",
+        "curso": "Curso",
+        "tema": "Tema",
+        "avance": "Avance",
+        "fin": "Terminado",
+        "proyecto": "Proyecto",
+        "resumen": "{t} terminados · {c} en curso · {p} previstos.",
+        "vacio": "Ninguno por ahora.",
+    },
+    "en": {
+        "en_curso": "In progress",
+        "terminados": "Completed",
+        "previstos": "Planned in the roadmap",
+        "curso": "Course",
+        "tema": "Topic",
+        "avance": "Progress",
+        "fin": "Completed",
+        "proyecto": "Project",
+        "resumen": "{t} completed · {c} in progress · {p} planned.",
+        "vacio": "None yet.",
+    },
+}
+
+
+def load(path: Path = DATA) -> list[dict]:
+    cursos = yaml.safe_load(path.read_text(encoding="utf-8")) or []
+    for c in cursos:
+        if "titulo" not in c or "tema" not in c:
+            raise ValueError(f"cursos.yaml: missing titulo/tema in {c}")
+        if c["tema"] not in TEMAS:
+            raise ValueError(f"cursos.yaml: unknown tema {c['tema']!r} in {c['titulo']!r}")
+        c.setdefault("avance", 0)
+        if not 0 <= c["avance"] <= 100:
+            raise ValueError(f"cursos.yaml: avance out of range in {c['titulo']!r}")
+    return [c for c in cursos if c.get("mostrar", True)]
+
+
+def group(cursos: list[dict]) -> tuple[list, list, list]:
+    previstos = [c for c in cursos if c.get("comprado") is False]
+    resto = [c for c in cursos if c.get("comprado") is not False]
+    terminados = sorted(
+        (c for c in resto if c["avance"] >= DONE),
+        key=lambda c: str(c.get("fin", "")),
+        reverse=True,
+    )
+    en_curso = sorted(
+        (c for c in resto if c["avance"] < DONE),
+        key=lambda c: (not c.get("plan"), -c["avance"]),
+    )
+    return en_curso, terminados, previstos
+
+
+def _title(c: dict) -> str:
+    t = html.escape(c["titulo"])
+    autor = f" · {html.escape(c['autor'])}" if c.get("autor") else ""
+    return f"**{t}**<br><small>{html.escape(c.get('plataforma', ''))}{autor}</small>"
+
+
+def _bar(avance: int) -> str:
+    # Pure CSS progress bar (styled in extra.css).
+    return (
+        f'<span class="course-progress"><span class="course-bar" title="{avance} %">'
+        f'<span style="width:{avance}%"></span></span>&nbsp;{avance}&nbsp;%</span>'
+    )
+
+
+def render(cursos: list[dict], lang: str) -> str:
+    t = TEXT.get(lang, TEXT["es"])
+    idx = 1 if lang == "en" else 0
+    tema = lambda c: TEMAS[c["tema"]][idx]  # noqa: E731
+    en_curso, terminados, previstos = group(cursos)
+
+    out = [t["resumen"].format(t=len(terminados), c=len(en_curso), p=len(previstos)), ""]
+
+    out += [f"## {t['en_curso']}", ""]
+    if en_curso:
+        out += [f"| {t['curso']} | {t['tema']} | {t['avance']} | {t['proyecto']} |", "| --- | --- | --- | --- |"]
+        out += [f"| {_title(c)} | {tema(c)} | {_bar(c['avance'])} | {c.get('plan', '')} |" for c in en_curso]
+    else:
+        out.append(t["vacio"])
+
+    out += ["", f"## {t['previstos']}", ""]
+    if previstos:
+        out += [f"| {t['curso']} | {t['tema']} | {t['proyecto']} |", "| --- | --- | --- |"]
+        out += [f"| {_title(c)} | {tema(c)} | {c.get('plan', '')} |" for c in previstos]
+    else:
+        out.append(t["vacio"])
+
+    out += ["", f"## {t['terminados']}", ""]
+    if terminados:
+        out += [f"| {t['curso']} | {t['tema']} | {t['fin']} |", "| --- | --- | --- |"]
+        out += [f"| {_title(c)} | {tema(c)} | {c.get('fin', '')} |" for c in terminados]
+    else:
+        out.append(t["vacio"])
+    return "\n".join(out) + "\n"
+
+
+def on_page_markdown(markdown, page, config, files):
+    if MARKER not in markdown:
+        return markdown
+    lang = config["theme"]["language"]
+    return markdown.replace(MARKER, render(load(), lang))
+
+
+if __name__ == "__main__":
+    # Self-test, run by CI: the YAML parses and both languages render.
+    cursos = load()
+    for lang in ("es", "en"):
+        assert "|" in render(cursos, lang)
+    print(f"ok: {len(cursos)} courses")
