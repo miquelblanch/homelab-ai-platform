@@ -195,3 +195,22 @@
   border-color: var(--md-accent-fg-color);
   color: #fff;
 }
+
+/* Course progress bar (rendered by hooks/cursos.py). */
+.course-bar {
+  display: inline-block;
+  width: 5rem;
+  height: 0.4rem;
+  border-radius: 0.2rem;
+  background: var(--md-default-fg-color--lightest);
+  vertical-align: middle;
+  overflow: hidden;
+}
+.course-bar > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--md-accent-fg-color), var(--accent-2));
+}
+.course-progress {
+  white-space: nowrap;
+}
