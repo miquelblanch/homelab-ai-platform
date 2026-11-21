@@ -214,3 +214,20 @@
 .course-progress {
   white-space: nowrap;
 }
+
+/* Skill level dots (rendered by hooks/progreso.py). */
+.lvl-dots {
+  white-space: nowrap;
+}
+.lvl {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-right: 0.15rem;
+  border-radius: 50%;
+  background: var(--md-default-fg-color--lightest);
+  vertical-align: middle;
+}
+.lvl--on {
+  background: linear-gradient(135deg, var(--md-accent-fg-color), var(--accent-2));
+}

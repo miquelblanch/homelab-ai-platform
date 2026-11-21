@@ -43,6 +43,7 @@ theme:
 # Build-time Python hooks (built into MkDocs, no extra dependency).
 hooks:
   - hooks/cursos.py
+  - hooks/progreso.py
 
 plugins:
   # Declaring plugins replaces MkDocs' implicit default, so search must be
@@ -74,6 +75,7 @@ plugins:
           nav_translations:
             Inicio: Home
             Cursos: Courses
+            Progreso: Progress
             Visión general: Overview
             Arquitectura: Architecture
             El agente: The agent
@@ -86,6 +88,7 @@ nav:
   - Inicio: index.md
   - CV: cv.md
   - Cursos: cursos.md
+  - Progreso: progreso.md
   - Homelab:
       - Visión general: homelab.md
       - Arquitectura: architecture.md
