@@ -79,6 +79,7 @@ plugins:
 
 nav:
   - Inicio: index.md
+  - CV: cv.md
   - Homelab:
       - Visión general: homelab.md
       - Arquitectura: architecture.md

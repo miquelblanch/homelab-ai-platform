@@ -182,3 +182,16 @@
 .md-typeset .grid.cards .lg {
   color: var(--md-accent-fg-color);
 }
+
+/* Buttons use the accent (the primary colour is white in this theme). */
+.md-typeset .md-button {
+  color: var(--md-accent-fg-color);
+  border-color: var(--md-accent-fg-color);
+  border-radius: 6px;
+}
+.md-typeset .md-button:hover,
+.md-typeset .md-button:focus {
+  background-color: var(--md-accent-fg-color);
+  border-color: var(--md-accent-fg-color);
+  color: #fff;
+}
