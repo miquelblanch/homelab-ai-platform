@@ -5,15 +5,17 @@ hide:
   - toc
 ---
 
+<div class="hero" markdown>
+
 # Miquel Blanch
 
-**AI Engineering, aprendido construyendo y medido en público.**
+<p class="tagline">AI Engineering, aprendido construyendo y medido en público.</p>
 
 Soy ingeniero de telecomunicaciones y electrónica. Pasé 17 años en infraestructura, centros de datos y gestión de servicio, y desde 2016 trabajo en Talent en Grifols, donde hoy llevo proyectos de IA. En casa opero una plataforma de IA autoalojada en un Mac Mini, con las mismas prácticas que aplicaría a un sistema en producción.
 
 Este sitio recoge lo que construyo, cómo lo mido y lo que aprendo por el camino. Mi objetivo hasta noviembre de 2027 es llevar cada competencia de AI Engineering (evals, observabilidad, RAG, agentes, MCP, modelos locales, fine-tuning y deep learning) a un nivel que pueda **demostrar con datos**, no solo describir.
 
----
+</div>
 
 ## Accesos
 

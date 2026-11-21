@@ -115,3 +115,70 @@
 .lang-flag--current {
   opacity: 1;
 }
+
+/* ---- Accent touches ------------------------------------------------- */
+
+:root,
+[data-md-color-scheme="default"] {
+  --accent-2: #0f9d8a; /* teal, second colour of the gradient */
+  --hero-bg: linear-gradient(135deg, #eef2ff 0%, #ecfdf8 100%);
+}
+[data-md-color-scheme="slate"] {
+  --accent-2: #3fd0b8;
+  --hero-bg: linear-gradient(135deg, #1b2240 0%, #13302d 100%);
+}
+
+/* Thin gradient line on top of the header. */
+.md-header {
+  border-top: 3px solid transparent;
+  border-image: linear-gradient(90deg, var(--md-accent-fg-color), var(--accent-2)) 1;
+}
+
+/* Active tab underlined in the accent colour. */
+.md-tabs__item--active .md-tabs__link {
+  color: var(--md-accent-fg-color);
+  box-shadow: inset 0 -2px 0 var(--md-accent-fg-color);
+  padding-bottom: 0.3rem;
+}
+
+/* Section titles with a short accent bar. */
+.md-typeset h2 {
+  position: relative;
+  padding-left: 0.8rem;
+}
+.md-typeset h2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.2em;
+  bottom: 0.2em;
+  width: 4px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--md-accent-fg-color), var(--accent-2));
+}
+
+/* Home hero block. */
+.md-typeset .hero {
+  background: var(--hero-bg);
+  border-radius: 10px;
+  padding: 1.6rem 1.8rem 1.2rem;
+  margin-bottom: 1.5rem;
+}
+.md-typeset .hero h1 {
+  margin-bottom: 0.4rem;
+  font-size: 2.2rem;
+}
+.md-typeset .hero .tagline {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-top: 0;
+  background: linear-gradient(90deg, var(--md-accent-fg-color), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Card icons in the accent colour. */
+.md-typeset .grid.cards .lg {
+  color: var(--md-accent-fg-color);
+}

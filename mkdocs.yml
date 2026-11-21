@@ -64,6 +64,9 @@ plugins:
           site_description: >-
             What I build, measure and learn about AI Engineering: evals, RAG,
             agents, MCP and local models, on a real homelab on a Mac Mini.
+          copyright: >-
+            Written by Miquel Blanch. Network addresses, domains and
+            credentials in this documentation are illustrative.
           nav_translations:
             Inicio: Home
             Visión general: Overview
