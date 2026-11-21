@@ -1,0 +1,197 @@
+/* Look & feel: sober, editorial. Light header with a thin rule instead of a
+   coloured bar, ink-blue accent, Inter for text and JetBrains Mono for code.
+   CSS only: no JavaScript. */
+
+:root,
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #ffffff;
+  --md-primary-fg-color--light: #ffffff;
+  --md-primary-fg-color--dark: #f4f4f2;
+  --md-primary-bg-color: #1d2433;
+  --md-primary-bg-color--light: #5b6475;
+  --md-accent-fg-color: #2f4fb3;
+  --md-typeset-a-color: #2f4fb3;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #14171f;
+  --md-primary-fg-color--light: #14171f;
+  --md-primary-fg-color--dark: #0f1117;
+  --md-primary-bg-color: #e6e8ee;
+  --md-primary-bg-color--light: #9aa3b5;
+  --md-default-bg-color: #14171f;
+  --md-accent-fg-color: #8ea6ff;
+  --md-typeset-a-color: #8ea6ff;
+}
+
+/* Header and tabs: same colour as the page, separated by a hairline. */
+.md-header,
+.md-tabs {
+  background-color: var(--md-primary-fg-color);
+  color: var(--md-primary-bg-color);
+  box-shadow: none;
+}
+.md-tabs {
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+.md-header__title {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.md-tabs__link {
+  font-size: 0.72rem;
+  opacity: 0.7;
+}
+.md-tabs__item--active .md-tabs__link {
+  opacity: 1;
+  font-weight: 600;
+}
+.md-search__form {
+  background-color: var(--md-default-fg-color--lightest);
+}
+
+/* Typography. */
+.md-typeset h1 {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--md-default-fg-color);
+}
+.md-typeset h2 {
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.md-typeset hr {
+  border-bottom-color: var(--md-default-fg-color--lightest);
+}
+
+/* Cards: thin border, small radius, accent on hover. */
+.md-typeset .grid.cards > ul > li,
+.md-typeset .grid > .card {
+  border-radius: 6px;
+  border-color: var(--md-default-fg-color--lightest);
+}
+.md-typeset .grid.cards > ul > li:hover,
+.md-typeset .grid > .card:hover {
+  border-color: var(--md-accent-fg-color);
+  box-shadow: none;
+}
+
+/* Tables. */
+.md-typeset table:not([class]) {
+  border-radius: 6px;
+  font-size: 0.72rem;
+}
+
+/* Footer: same background as the page, muted text. */
+.md-footer,
+.md-footer-meta {
+  background-color: var(--md-default-bg-color);
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+  --md-footer-fg-color: var(--md-default-fg-color);
+  --md-footer-fg-color--light: var(--md-default-fg-color--light);
+  --md-footer-fg-color--lighter: var(--md-default-fg-color--light);
+}
+
+/* Language flags. */
+.lang-flags {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0.4rem;
+}
+.lang-flag {
+  display: inline-flex;
+  opacity: 0.45;
+  transition: opacity 0.15s;
+}
+.lang-flag svg {
+  width: 1.4rem;
+  height: 0.95rem;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px var(--md-default-fg-color--lightest);
+}
+.lang-flag:hover,
+.lang-flag:focus,
+.lang-flag--current {
+  opacity: 1;
+}
+
+/* ---- Accent touches ------------------------------------------------- */
+
+:root,
+[data-md-color-scheme="default"] {
+  --accent-2: #0f9d8a; /* teal, second colour of the gradient */
+  --hero-bg: linear-gradient(135deg, #eef2ff 0%, #ecfdf8 100%);
+}
+[data-md-color-scheme="slate"] {
+  --accent-2: #3fd0b8;
+  --hero-bg: linear-gradient(135deg, #1b2240 0%, #13302d 100%);
+}
+
+/* Thin gradient line on top of the header. */
+.md-header {
+  border-top: 3px solid transparent;
+  border-image: linear-gradient(90deg, var(--md-accent-fg-color), var(--accent-2)) 1;
+}
+
+/* Active tab underlined in the accent colour. */
+.md-tabs__item--active .md-tabs__link {
+  color: var(--md-accent-fg-color);
+  box-shadow: inset 0 -2px 0 var(--md-accent-fg-color);
+  padding-bottom: 0.3rem;
+}
+
+/* Section titles with a short accent bar. */
+.md-typeset h2 {
+  position: relative;
+  padding-left: 0.8rem;
+}
+.md-typeset h2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.2em;
+  bottom: 0.2em;
+  width: 4px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--md-accent-fg-color), var(--accent-2));
+}
+
+/* Home hero block. */
+.md-typeset .hero {
+  background: var(--hero-bg);
+  border-radius: 10px;
+  padding: 1.6rem 1.8rem 1.2rem;
+  margin-bottom: 1.5rem;
+}
+.md-typeset .hero h1 {
+  margin-bottom: 0.4rem;
+  font-size: 2.2rem;
+}
+.md-typeset .hero .tagline {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-top: 0;
+  background: linear-gradient(90deg, var(--md-accent-fg-color), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Card icons in the accent colour. */
+.md-typeset .grid.cards .lg {
+  color: var(--md-accent-fg-color);
+}
+
+/* Buttons use the accent (the primary colour is white in this theme). */
+.md-typeset .md-button {
+  color: var(--md-accent-fg-color);
+  border-color: var(--md-accent-fg-color);
+  border-radius: 6px;
+}
+.md-typeset .md-button:hover,
+.md-typeset .md-button:focus {
+  background-color: var(--md-accent-fg-color);
+  border-color: var(--md-accent-fg-color);
+  color: #fff;
+}

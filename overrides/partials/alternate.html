@@ -1,0 +1,20 @@
+{#-
+  Language switcher as two flags instead of Material's dropdown.
+  Pure template + CSS: no JavaScript. The i18n plugin fills
+  config.extra.alternate with the equivalent page in each language.
+-#}
+{% set flags = {
+  "es": '<svg viewBox="0 0 750 500" aria-hidden="true"><rect width="750" height="500" fill="#c60b1e"/><rect width="750" height="250" y="125" fill="#ffc400"/></svg>',
+  "en": '<svg viewBox="0 0 60 30" aria-hidden="true"><clipPath id="uk-t"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath><path d="M0,0 v30 h60 v-30 z" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#uk-t)" stroke="#C8102E" stroke-width="4"/><path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/><path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/></svg>'
+} %}
+<div class="md-header__option lang-flags">
+  {% for alt in config.extra.alternate %}
+    {% set current = alt.lang == config.theme.language %}
+    <a href="{{ alt.link | url }}" hreflang="{{ alt.lang }}" lang="{{ alt.lang }}"
+       class="lang-flag{% if current %} lang-flag--current{% endif %}"
+       title="{{ alt.name }}" aria-label="{{ alt.name }}"
+       {% if current %}aria-current="true"{% endif %}>
+      {{ flags[alt.lang] | safe }}
+    </a>
+  {% endfor %}
+</div>
