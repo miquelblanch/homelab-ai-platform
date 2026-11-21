@@ -14,14 +14,14 @@
 #   comprado    false for courses planned in the roadmap but not bought yet
 #   mostrar     false to keep it in the file but off the site (default true)
 
-- titulo: "AI Engineer Agentic Track: The Complete Agent & MCP Course"
+- titulo: "AI Engineer Agentic Track: Agents & MCP"
   autor: Ed Donner
   plataforma: Udemy
   tema: agentes
   avance: 55
   plan: P2
 
-- titulo: "MCP Crash Course: Complete Model Context Protocol in a Day"
+- titulo: "MCP Crash Course"
   autor: Eden Marco
   plataforma: Udemy
   tema: mcp
