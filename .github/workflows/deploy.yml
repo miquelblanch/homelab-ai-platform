@@ -42,9 +42,11 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      # Generated pages: fail early if data/cursos.yaml is malformed.
+      # Generated pages: fail early if the YAML data is malformed.
       - name: Check generated-page data
-        run: python3 hooks/cursos.py
+        run: |
+          python3 hooks/cursos.py
+          python3 hooks/progreso.py
 
       # --strict convierte los avisos en errores: un enlace interno roto
       # tumba el build en vez de publicar un 404.

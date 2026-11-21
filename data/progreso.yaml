@@ -1,0 +1,168 @@
+# Roadmap progress, shown on the "Progreso / Progress" page.
+#
+# Edit this file at the monthly review: change `nivel` when a level is reached
+# and add the evidence that proves it. The build renders it in both languages.
+#
+# Scale (evidence only):
+#   0 no evidence · 1 studied · 2 used in an own project
+#   3 in production, maintained and debugged · 4 designed with method,
+#   measured and published
+#
+# Fields per skill
+#   id          stable key
+#   es / en     name in each language
+#   nivel       current level (0-4)
+#   objetivo    target level for the end date
+#   hitos       planned level by date (YYYY-MM: level), from the roadmap
+#   evidencia   list of {es, en, url?}: what backs the current level
+#   cuatro      {es, en}: what "level 4" means for this skill
+
+actualizado: 2026-11-21
+fin: 2027-11
+
+competencias:
+  - id: evals
+    es: Evals de RAG y de LLM
+    en: RAG and LLM evals
+    nivel: 1
+    objetivo: 4
+    hitos: {2027-02: 3, 2027-06: 4}
+    evidencia:
+      - es: Tests deterministas de las integraciones con LLM, sin evaluación de calidad.
+        en: Deterministic tests of the LLM integrations, no quality evaluation.
+    cuatro:
+      es: Harness propio con golden set, LLM-as-judge calibrado contra etiquetas humanas y evals en CI que bloquean regresiones.
+      en: Own harness with a golden set, an LLM-as-judge calibrated against human labels, and CI evals that block regressions.
+
+  - id: observabilidad
+    es: Observabilidad de LLM
+    en: LLM observability
+    nivel: 1
+    objetivo: 4
+    hitos: {2027-02: 3, 2027-06: 4}
+    evidencia:
+      - es: Coste por llamada anotado a mano; control de saldo de APIs.
+        en: Per-call cost noted by hand; API balance monitoring.
+    cuatro:
+      es: Trazas, coste y latencia de todos los LLM en Langfuse, con alertas y un case study con 3 meses de datos.
+      en: Traces, cost and latency for every LLM in Langfuse, with alerts and a case study on 3 months of data.
+
+  - id: rag
+    es: RAG avanzado
+    en: Advanced RAG
+    nivel: 3
+    objetivo: 4
+    hitos: {2027-02: 4}
+    evidencia:
+      - es: Búsqueda híbrida (pgvector + BM25 + RRF) sobre ~2.000 páginas, en producción.
+        en: Hybrid search (pgvector + BM25 + RRF) over ~2,000 pages, in production.
+        url: case-studies/rag.md
+    cuatro:
+      es: Comparativa publicada de recuperación, chunking y embeddings, con la decisión tomada por números.
+      en: Published comparison of retrieval, chunking and embeddings, with the decision made by the numbers.
+
+  - id: agent_evals
+    es: Evals de agentes y tool-calls
+    en: Agent and tool-call evals
+    nivel: 1
+    objetivo: 4
+    hitos: {2027-04: 3, 2027-06: 4}
+    evidencia:
+      - es: Agentes en producción (Fermín, Aprendiz, Guardia) sin evaluación sistemática.
+        en: Agents in production (Fermín, Aprendiz, Guardia) without systematic evaluation.
+        url: case-studies/agent.md
+    cuatro:
+      es: Eval por replay con averías reales y eval de uso de herramientas, usadas para validar una mejora del agente.
+      en: Replay eval on real incidents and a tool-use eval, used to validate an agent improvement.
+
+  - id: mcp
+    es: MCP
+    en: MCP
+    nivel: 2
+    objetivo: 4
+    hitos: {2027-04: 4}
+    evidencia:
+      - es: Servidores MCP de terceros operados con agentes; ninguno propio todavía.
+        en: Third-party MCP servers operated with agents; none of my own yet.
+    cuatro:
+      es: Servidor MCP propio publicado como paquete, con tests, seguridad documentada y dos clientes.
+      en: Own MCP server published as a package, with tests, documented security and two clients.
+
+  - id: local
+    es: Modelos locales (MLX)
+    en: Local models (MLX)
+    nivel: 1
+    objetivo: 4
+    hitos: {2027-07: 4}
+    evidencia:
+      - es: Embeddings locales con Ollama (`bge-m3`); un modelo local de 9B probado y retirado.
+        en: Local embeddings with Ollama (`bge-m3`); a local 9B model tried and retired.
+    cuatro:
+      es: Benchmark publicado de 4+ modelos en el M4 Pro (calidad, tokens/s, memoria y €) y uno en producción.
+      en: Published benchmark of 4+ models on the M4 Pro (quality, tokens/s, memory and €) and one in production.
+
+  - id: finetuning
+    es: Fine-tuning (LoRA/QLoRA)
+    en: Fine-tuning (LoRA/QLoRA)
+    nivel: 0
+    objetivo: 4
+    hitos: {2027-10: 4}
+    evidencia: []
+    cuatro:
+      es: Modelo afinado publicado en Hugging Face, con model card, evals frente a la base y en uso.
+      en: Fine-tuned model published on Hugging Face, with a model card, evals against the base, and in use.
+
+  - id: dl
+    es: Deep Learning / PyTorch
+    en: Deep learning / PyTorch
+    nivel: 1
+    objetivo: 4
+    hitos: {2027-10: 4}
+    evidencia:
+      - es: Curso de Deep Learning terminado (dic-2024), sin proyecto propio.
+        en: Deep learning course completed (Dec 2024), no own project.
+        url: cursos.md
+    cuatro:
+      es: Transformer pequeño implementado y entrenado en PyTorch, medido y explicado en un Learning log.
+      en: Small transformer implemented and trained in PyTorch, measured and explained in a learning log.
+
+  - id: empresa
+    es: IA en la empresa
+    en: AI in the enterprise
+    nivel: 2
+    objetivo: 4
+    hitos: {2027-04: 3, 2027-10: 4}
+    evidencia:
+      - es: Proyectos de IA en Talent y formación interna de IA generativa.
+        en: AI projects in Talent and internal generative AI training.
+    cuatro:
+      es: Un asistente con evals, métricas de uso y coste, aprobación de gobierno y un caso contado.
+      en: An assistant with evals, usage and cost metrics, governance approval and a told case.
+
+  - id: divulgacion
+    es: Divulgación (ES/EN)
+    en: Public writing (ES/EN)
+    nivel: 0
+    objetivo: 4
+    hitos: {2027-02: 1, 2027-04: 2, 2027-07: 3, 2027-11: 4}
+    evidencia:
+      - es: Case study del homelab publicado en español; este sitio, bilingüe.
+        en: Homelab case study published in Spanish; this site, bilingual.
+        url: homelab.md
+    cuatro:
+      es: 5 case studies bilingües con números y una charla en un meetup o jornada abierta.
+      en: 5 bilingual case studies with numbers and a talk at a meetup or open session.
+
+  - id: sre
+    es: Producción, SRE y SDD
+    en: Production, SRE and SDD
+    nivel: 4
+    objetivo: 4
+    hitos: {}
+    evidencia:
+      - es: Autorreparación verificada, ~100 experimentos de caos y 26 specs públicas de SDD.
+        en: Verified self-healing, ~100 chaos experiments and 26 public SDD specs.
+        url: case-studies/reliability.md
+    cuatro:
+      es: Se mantiene; cada proyecto del roadmap se hace con SDD.
+      en: Kept; every roadmap project is built with SDD.
