@@ -24,7 +24,7 @@ proyectos:
     inicio: 2026-11-21
     fin: 2026-11-22
     horas_plan: 20
-    horas: 4
+    horas: 2
     resultado:
       es: Este sitio, el repo ai-engineering-lab y el corpus público
       en: This site, the ai-engineering-lab repo and the public corpus
