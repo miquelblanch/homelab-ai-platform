@@ -13,7 +13,7 @@ hide:
 
 I am a telecommunications and electronics engineer. I spent 17 years in infrastructure, data centres and service management, and since 2016 I have worked in Talent at Grifols, where I now lead AI projects. At home I run a self-hosted AI platform on a Mac Mini, with the same practices I would apply to a production system.
 
-This site collects what I build, how I measure it and what I learn along the way. My goal until November 2027 is to take every AI Engineering skill (evals, observability, RAG, agents, MCP, local models, fine-tuning and deep learning) to a level I can **prove with data**, not just describe.
+This site collects what I build, how I measure it and what I learn along the way. My goal until January 2028 is to take every AI Engineering skill (evals, observability, RAG, agents, MCP, local models, fine-tuning, deep learning and harness engineering) to a level I can **prove with data**, not just describe.
 
 </div>
 
