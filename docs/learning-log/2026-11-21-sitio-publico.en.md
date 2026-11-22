@@ -4,7 +4,7 @@ title: A bilingual site on its own domain
 
 # A bilingual site on its own domain
 
-**Project:** P0 · **Date:** 21 Nov 2026 · **Hours:** 4
+**Project:** P0 · **Date:** 21 Nov 2026 · **Hours:** 2
 
 ## What I built
 

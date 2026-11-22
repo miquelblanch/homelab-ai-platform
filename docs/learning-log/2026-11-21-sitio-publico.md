@@ -4,7 +4,7 @@ title: Un sitio bilingüe con dominio propio
 
 # Un sitio bilingüe con dominio propio
 
-**Proyecto:** P0 · **Fecha:** 21-11-2026 · **Horas:** 4
+**Proyecto:** P0 · **Fecha:** 21-11-2026 · **Horas:** 2
 
 ## Qué he construido
 

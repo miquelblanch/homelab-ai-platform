@@ -231,3 +231,87 @@
 .lvl--on {
   background: linear-gradient(135deg, var(--md-accent-fg-color), var(--accent-2));
 }
+
+/* Project timeline (inline SVG rendered by hooks/proyectos.py). */
+.gantt-wrap {
+  overflow-x: auto;
+  margin: 1rem 0 1.5rem;
+}
+.gantt {
+  width: 100%;
+  min-width: 560px;
+  height: auto;
+  font-family: var(--md-text-font-family);
+}
+.gantt-grid {
+  stroke: var(--md-default-fg-color--lightest);
+  stroke-width: 1;
+}
+.gantt-axis {
+  fill: var(--md-default-fg-color--light);
+  font-size: 11px;
+}
+.gantt-label {
+  fill: var(--md-default-fg-color);
+  font-size: 12px;
+  font-weight: 500;
+}
+.gantt-hours {
+  fill: var(--md-default-fg-color--light);
+  font-size: 11px;
+  font-family: var(--md-code-font-family);
+}
+.gantt-plan {
+  fill: var(--md-default-fg-color--lightest);
+  stroke: var(--md-default-fg-color--lighter);
+  stroke-width: 1;
+  stroke-dasharray: 3 2;
+}
+.gantt-band {
+  fill: color-mix(in srgb, var(--md-accent-fg-color) 7%, transparent);
+}
+.gantt-real {
+  fill: url(#gantt-grad);
+}
+.gantt-real--done {
+  opacity: 0.75;
+}
+.gantt-stop-a {
+  stop-color: var(--md-accent-fg-color);
+}
+.gantt-stop-b {
+  stop-color: var(--accent-2);
+}
+.gantt-today {
+  stroke: var(--accent-2);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+.gantt-today-label {
+  fill: var(--accent-2);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Project status pills in the projects table. */
+.pstate {
+  display: inline-block;
+  padding: 0.05rem 0.5rem;
+  border-radius: 1rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--md-default-fg-color--lightest);
+  color: var(--md-default-fg-color--light);
+}
+.pstate--en_curso {
+  background: color-mix(in srgb, var(--md-accent-fg-color) 15%, transparent);
+  color: var(--md-accent-fg-color);
+}
+.pstate--hecho {
+  background: color-mix(in srgb, var(--accent-2) 18%, transparent);
+  color: var(--accent-2);
+}
+.nowrap {
+  white-space: nowrap;
+}

@@ -47,6 +47,7 @@ jobs:
         run: |
           python3 hooks/cursos.py
           python3 hooks/progreso.py
+          python3 hooks/proyectos.py
 
       # --strict convierte los avisos en errores: un enlace interno roto
       # tumba el build en vez de publicar un 404.
