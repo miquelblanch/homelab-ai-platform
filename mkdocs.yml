@@ -45,6 +45,7 @@ theme:
 hooks:
   - hooks/cursos.py
   - hooks/progreso.py
+  - hooks/proyectos.py
 
 plugins:
   # Declaring plugins replaces MkDocs' implicit default, so search must be

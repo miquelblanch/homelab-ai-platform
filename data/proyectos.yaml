@@ -1,0 +1,104 @@
+# Roadmap projects, shown on the "Progreso / Progress" page as a timeline
+# chart and a table. Edit at the monthly review or when a project moves.
+#
+# Fields per project
+#   id                 P0..P6
+#   es / en            name in each language
+#   estado             pendiente | en_curso | hecho
+#   plan_inicio/fin    planned window from the roadmap (YYYY-MM-DD)
+#   inicio / fin       real dates (leave out until they happen)
+#   horas_plan         planned hours
+#   horas              real hours so far (sum of the learning log entries)
+#   resultado {es,en}  what the project delivers (the case study, when it exists)
+#   url                link to the result, once published
+
+actualizado: 2026-11-22
+
+proyectos:
+  - id: P0
+    es: Arranque y sitio público
+    en: Kick-off and public site
+    estado: hecho
+    plan_inicio: 2026-12-01
+    plan_fin: 2026-12-14
+    inicio: 2026-11-21
+    fin: 2026-11-22
+    horas_plan: 20
+    horas: 4
+    resultado:
+      es: Este sitio, el repo ai-engineering-lab y el corpus público
+      en: This site, the ai-engineering-lab repo and the public corpus
+    url: https://github.com/miquelblanch/ai-engineering-lab
+
+  - id: P1
+    es: RAG Evals Lab
+    en: RAG Evals Lab
+    estado: en_curso
+    plan_inicio: 2026-12-15
+    plan_fin: 2027-02-28
+    inicio: 2026-11-22
+    horas_plan: 55
+    horas: 0
+    resultado:
+      es: "Case study: ¿ayuda de verdad la búsqueda híbrida?"
+      en: "Case study: does hybrid retrieval actually help?"
+
+  - id: P2
+    es: homelab-mcp y evals de agente
+    en: homelab-mcp and agent evals
+    estado: pendiente
+    plan_inicio: 2027-03-01
+    plan_fin: 2027-04-30
+    horas_plan: 50
+    horas: 0
+    resultado:
+      es: "Case study: evaluar un agente con su propio historial de averías"
+      en: "Case study: evaluating an ops agent on its own incident history"
+
+  - id: P3
+    es: Evals en CI
+    en: Evals in CI
+    estado: pendiente
+    plan_inicio: 2027-05-01
+    plan_fin: 2027-06-15
+    horas_plan: 35
+    horas: 0
+    resultado:
+      es: "Case study: evals como puerta de calidad en CI"
+      en: "Case study: evals as CI quality gates"
+
+  - id: P4
+    es: Benchmark de modelos locales
+    en: Local model benchmark
+    estado: pendiente
+    plan_inicio: 2027-06-16
+    plan_fin: 2027-07-31
+    horas_plan: 35
+    horas: 0
+    resultado:
+      es: "Case study: qué puede servir de verdad un Mac Mini M4 Pro"
+      en: "Case study: what a Mac Mini M4 Pro can really serve"
+
+  - id: P5
+    es: Transformer desde cero y LoRA
+    en: Transformer from scratch and LoRA
+    estado: pendiente
+    plan_inicio: 2027-08-01
+    plan_fin: 2027-10-31
+    horas_plan: 75
+    horas: 0
+    resultado:
+      es: "Case study: de la atención a un modelo ajustado de triaje"
+      en: "Case study: from attention to a fine-tuned triage model"
+
+  - id: P6
+    es: Cierre, charla y resumen anual
+    en: Wrap-up, talk and yearly review
+    estado: pendiente
+    plan_inicio: 2027-11-01
+    plan_fin: 2027-11-30
+    horas_plan: 20
+    horas: 0
+    resultado:
+      es: Charla de 20-30 minutos y autoevaluación con evidencias
+      en: A 20-30 minute talk and a self-assessment with evidence
