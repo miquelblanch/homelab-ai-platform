@@ -8,7 +8,7 @@
 #   plan_inicio/fin    planned window from the roadmap (YYYY-MM-DD)
 #   inicio / fin       real dates (leave out until they happen)
 #   horas_plan         planned hours
-#   horas              real hours so far (sum of the learning log entries)
+#   horas              real hours so far (should match the learning log entries)
 #   resultado {es,en}  what the project delivers (the case study, when it exists)
 #   url                link to the result, once published
 
