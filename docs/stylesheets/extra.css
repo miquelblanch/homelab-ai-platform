@@ -232,65 +232,169 @@
   background: linear-gradient(135deg, var(--md-accent-fg-color), var(--accent-2));
 }
 
-/* Project timeline (inline SVG rendered by hooks/proyectos.py). */
-.gantt-wrap {
-  overflow-x: auto;
+/* Roadmap progress (HTML rendered by hooks/proyectos.py). Explicit colours
+   per scheme: Material's translucent greys are too faint on the dark theme. */
+:root,
+[data-md-color-scheme="default"] {
+  --pg-track: #e7e9f0;
+  --pg-card: #f7f8fb;
+  --pg-line: #dfe2ea;
+  --pg-muted: #5b6475;
+  --pg-on-fill: #ffffff;
+  --pg-fill-a: #2f4fb3;
+  --pg-fill-b: #0f9d8a;
+}
+[data-md-color-scheme="slate"] {
+  --pg-track: #2a3142;
+  --pg-card: #1a1f2b;
+  --pg-line: #2e3547;
+  --pg-muted: #a9b1c3;
+  --pg-on-fill: #0f1117;
+  --pg-fill-a: #8ea6ff;
+  --pg-fill-b: #3fd0b8;
+}
+.md-typeset .pg {
   margin: 1rem 0 1.5rem;
 }
-.gantt {
-  width: 100%;
-  min-width: 560px;
-  height: auto;
-  font-family: var(--md-text-font-family);
+.md-typeset .pg-hero {
+  background: var(--pg-card);
+  border: 1px solid var(--pg-line);
+  border-radius: 10px;
+  padding: 1.1rem 1.2rem 0.6rem;
 }
-.gantt-grid {
-  stroke: var(--md-default-fg-color--lightest);
-  stroke-width: 1;
+.md-typeset .pg-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
 }
-.gantt-axis {
-  fill: var(--md-default-fg-color--light);
-  font-size: 11px;
+.md-typeset .pg-big {
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1;
+  background: linear-gradient(90deg, var(--pg-fill-a), var(--pg-fill-b));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
-.gantt-label {
-  fill: var(--md-default-fg-color);
-  font-size: 12px;
-  font-weight: 500;
-}
-.gantt-hours {
-  fill: var(--md-default-fg-color--light);
-  font-size: 11px;
-  font-family: var(--md-code-font-family);
-}
-.gantt-plan {
-  fill: var(--md-default-fg-color--lightest);
-  stroke: var(--md-default-fg-color--lighter);
-  stroke-width: 1;
-  stroke-dasharray: 3 2;
-}
-.gantt-band {
-  fill: color-mix(in srgb, var(--md-accent-fg-color) 7%, transparent);
-}
-.gantt-real {
-  fill: url(#gantt-grad);
-}
-.gantt-real--done {
-  opacity: 0.75;
-}
-.gantt-stop-a {
-  stop-color: var(--md-accent-fg-color);
-}
-.gantt-stop-b {
-  stop-color: var(--accent-2);
-}
-.gantt-today {
-  stroke: var(--accent-2);
-  stroke-width: 2;
-  stroke-dasharray: 4 3;
-}
-.gantt-today-label {
-  fill: var(--accent-2);
-  font-size: 11px;
+.md-typeset .pg-avance {
   font-weight: 600;
+  color: var(--md-default-fg-color);
+}
+.md-typeset .pg-track {
+  display: flex;
+  gap: 3px;
+  margin-top: 0.9rem;
+  height: 1.6rem;
+}
+.md-typeset .pg-seg {
+  position: relative;
+  min-width: 2.2rem;
+  background: var(--pg-track);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.md-typeset .pg-seg--en_curso {
+  box-shadow: inset 0 0 0 2px var(--pg-fill-a);
+}
+.md-typeset .pg-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, var(--pg-fill-a), var(--pg-fill-b));
+}
+.md-typeset .pg-seg-id {
+  position: relative;
+  display: block;
+  padding-left: 0.45rem;
+  line-height: 1.6rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--pg-muted);
+}
+.md-typeset .pg-seg--hecho .pg-seg-id {
+  color: var(--pg-on-fill);
+}
+.md-typeset .pg-detail {
+  margin: 0.6rem 0 0;
+  font-size: 0.72rem;
+  color: var(--pg-muted);
+}
+.md-typeset .pg-rows {
+  margin-top: 1rem;
+  border-top: 1px solid var(--pg-line);
+}
+.md-typeset .pg-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6.2rem minmax(5rem, 11rem) 4.2rem;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.55rem 0.2rem;
+  border-bottom: 1px solid var(--pg-line);
+}
+.md-typeset .pg-name {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--md-default-fg-color);
+}
+.md-typeset .pg-id {
+  font-family: var(--md-code-font-family);
+  font-weight: 700;
+  margin-right: 0.2rem;
+}
+.md-typeset .pg-res {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: var(--pg-muted);
+}
+.md-typeset .pg-res a {
+  color: var(--md-typeset-a-color);
+}
+.md-typeset .pg-bar {
+  height: 0.55rem;
+  border-radius: 0.3rem;
+  background: var(--pg-track);
+  overflow: hidden;
+}
+.md-typeset .pg-bar > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--pg-fill-a), var(--pg-fill-b));
+}
+.md-typeset .pg-num {
+  text-align: right;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--md-default-fg-color);
+}
+.md-typeset .pg-num small {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 400;
+  color: var(--pg-muted);
+}
+.md-typeset .pg-row--pendiente .pg-name {
+  color: var(--pg-muted);
+}
+.md-typeset .pg-rule {
+  font-size: 0.66rem;
+  color: var(--pg-muted);
+}
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .pg-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 0.35rem;
+  }
+  .md-typeset .pg-bar {
+    grid-column: 1;
+  }
+  .md-typeset .pg-seg-id {
+    padding-left: 0.2rem;
+    font-size: 0.58rem;
+  }
+  .md-typeset .pg-seg {
+    min-width: 1.6rem;
+  }
 }
 
 /* Project status pills in the projects table. */
@@ -304,14 +408,16 @@
   background: var(--md-default-fg-color--lightest);
   color: var(--md-default-fg-color--light);
 }
+.pstate {
+  text-align: center;
+  background: var(--pg-track);
+  color: var(--pg-muted);
+}
 .pstate--en_curso {
-  background: color-mix(in srgb, var(--md-accent-fg-color) 15%, transparent);
-  color: var(--md-accent-fg-color);
+  background: color-mix(in srgb, var(--pg-fill-a) 18%, transparent);
+  color: var(--pg-fill-a);
 }
 .pstate--hecho {
-  background: color-mix(in srgb, var(--accent-2) 18%, transparent);
-  color: var(--accent-2);
-}
-.nowrap {
-  white-space: nowrap;
+  background: color-mix(in srgb, var(--pg-fill-b) 20%, transparent);
+  color: var(--pg-fill-b);
 }
