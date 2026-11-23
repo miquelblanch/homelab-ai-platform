@@ -20,6 +20,7 @@ planned hours.
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import html
 from pathlib import Path
 
@@ -93,26 +94,26 @@ def overall(ps: list[dict]) -> int:
 
 
 RING_R = 15.9155  # circumference 100, so a stroke-dasharray is a percentage
-CHECK = '<path d="M11.5 18.5l4.5 4.5 8.5-9" class="pg-check"/>'
+CHECK = '<path d="M11.5 18.5l4.5 4.5 8.5-9" class="pg-check" fill="none" stroke="#fff" stroke-width="3"/>'
 
 
 def _dot(p: dict) -> str:
     """Inline SVG for one station (36x36 viewBox)."""
     if p["estado"] == "hecho":
-        body = f'<circle cx="18" cy="18" r="13" class="pg-dot-done"/>{CHECK}'
+        body = f'<circle cx="18" cy="18" r="13" class="pg-dot-done" fill="#0f9d8a"/>{CHECK}'
     elif p["estado"] == "en_curso":
         body = (
-            f'<circle cx="18" cy="18" r="{RING_R}" class="pg-ring-track"/>'
+            f'<circle cx="18" cy="18" r="{RING_R}" class="pg-ring-track" fill="none" stroke="#c3c8d4" stroke-width="3.6"/>'
             + (
-                f'<circle cx="18" cy="18" r="{RING_R}" class="pg-ring-fill" '
+                f'<circle cx="18" cy="18" r="{RING_R}" class="pg-ring-fill" fill="none" stroke="#2f4fb3" stroke-width="3.6" '
                 f'stroke-dasharray="{pct(p)} 100" transform="rotate(-90 18 18)"/>'
                 if pct(p) else ""
             )
-            + '<circle cx="18" cy="18" r="6" class="pg-dot-now"/>'
+            + '<circle cx="18" cy="18" r="6" class="pg-dot-now" fill="#2f4fb3"/>'
         )
     else:
-        body = '<circle cx="18" cy="18" r="8" class="pg-dot-todo"/>'
-    return f'<svg class="pg-dot" viewBox="0 0 36 36" aria-hidden="true">{body}</svg>'
+        body = '<circle cx="18" cy="18" r="8" class="pg-dot-todo" fill="none" stroke="#c3c8d4" stroke-width="3"/>'
+    return f'<svg class="pg-dot" viewBox="0 0 36 36" width="36" height="36" aria-hidden="true">{body}</svg>'
 
 
 def render(data: dict, lang: str) -> str:
@@ -163,6 +164,22 @@ def render(data: dict, lang: str) -> str:
         )
     out += ["</div>", f'<p class="pg-rule">{e(t["regla"])}</p>', "</div>"]
     return "\n".join(out) + "\n"
+
+
+def on_config(config):
+    """Cache-bust extra.css: its URL carries a hash of its content.
+
+    Without it, browsers and the CDN keep serving the previous stylesheet for
+    a while after a deploy, and new markup (SVG without its styles) renders
+    as black shapes until the cache expires.
+    """
+    css = Path(config["docs_dir"]) / "stylesheets" / "extra.css"
+    if css.exists():
+        h = hashlib.sha256(css.read_bytes()).hexdigest()[:10]
+        config["extra_css"] = [
+            f"{u}?v={h}" if str(u) == "stylesheets/extra.css" else u for u in config["extra_css"]
+        ]
+    return config
 
 
 def on_page_markdown(markdown, page, config, files):
