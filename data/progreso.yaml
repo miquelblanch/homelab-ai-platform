@@ -11,6 +11,7 @@
 # Fields per skill
 #   id          stable key
 #   es / en     name in each language
+#   corto       {es, en}: short label for the radar chart (optional)
 #   nivel       current level (0-4)
 #   objetivo    target level for the end date
 #   hitos       planned level by date (YYYY-MM: level), from the roadmap
@@ -24,6 +25,7 @@ competencias:
   - id: evals
     es: Evals de RAG y de LLM
     en: RAG and LLM evals
+    corto: {es: Evals LLM, en: LLM evals}
     nivel: 1
     objetivo: 4
     hitos: {2027-02: 3, 2027-06: 4}
@@ -37,6 +39,7 @@ competencias:
   - id: observabilidad
     es: Observabilidad de LLM
     en: LLM observability
+    corto: {es: Observabilidad, en: Observability}
     nivel: 1
     objetivo: 4
     hitos: {2027-02: 3, 2027-06: 4}
@@ -50,6 +53,7 @@ competencias:
   - id: rag
     es: RAG avanzado
     en: Advanced RAG
+    corto: {es: RAG, en: RAG}
     nivel: 3
     objetivo: 4
     hitos: {2027-02: 4}
@@ -64,6 +68,7 @@ competencias:
   - id: agent_evals
     es: Evals de agentes y tool-calls
     en: Agent and tool-call evals
+    corto: {es: Evals agentes, en: Agent evals}
     nivel: 1
     objetivo: 4
     hitos: {2027-04: 3, 2027-06: 4}
@@ -78,6 +83,7 @@ competencias:
   - id: mcp
     es: MCP
     en: MCP
+    corto: {es: MCP, en: MCP}
     nivel: 2
     objetivo: 4
     hitos: {2027-04: 4}
@@ -91,6 +97,7 @@ competencias:
   - id: local
     es: Modelos locales (MLX)
     en: Local models (MLX)
+    corto: {es: Modelos locales, en: Local models}
     nivel: 1
     objetivo: 4
     hitos: {2027-07: 4}
@@ -104,6 +111,7 @@ competencias:
   - id: finetuning
     es: Fine-tuning (LoRA/QLoRA)
     en: Fine-tuning (LoRA/QLoRA)
+    corto: {es: Fine-tuning, en: Fine-tuning}
     nivel: 0
     objetivo: 4
     hitos: {2027-10: 4}
@@ -115,6 +123,7 @@ competencias:
   - id: dl
     es: Deep Learning / PyTorch
     en: Deep learning / PyTorch
+    corto: {es: Deep learning, en: Deep learning}
     nivel: 1
     objetivo: 4
     hitos: {2027-10: 4}
@@ -129,6 +138,7 @@ competencias:
   - id: empresa
     es: IA en la empresa
     en: AI in the enterprise
+    corto: {es: IA empresa, en: Enterprise AI}
     nivel: 2
     objetivo: 4
     hitos: {2027-04: 3, 2027-10: 4}
@@ -142,6 +152,7 @@ competencias:
   - id: divulgacion
     es: Divulgación (ES/EN)
     en: Public writing (ES/EN)
+    corto: {es: Divulgación, en: Writing}
     nivel: 0
     objetivo: 4
     hitos: {2027-02: 1, 2027-04: 2, 2027-07: 3, 2028-01: 4}
@@ -156,6 +167,7 @@ competencias:
   - id: harness
     es: Harness engineering
     en: Harness engineering
+    corto: {es: Harness, en: Harness}
     nivel: 2
     objetivo: 4
     hitos: {2027-04: 3, 2027-12: 4}
@@ -169,6 +181,7 @@ competencias:
   - id: sre
     es: Producción, SRE y SDD
     en: Production, SRE and SDD
+    corto: {es: SRE · SDD, en: SRE · SDD}
     nivel: 4
     objetivo: 4
     hitos: {}
