@@ -12,7 +12,7 @@
 #   resultado {es,en}  what the project delivers (the case study, when it exists)
 #   url                link to the result, once published
 
-actualizado: 2026-11-22
+actualizado: 2026-11-23
 
 proyectos:
   - id: P0
@@ -38,7 +38,7 @@ proyectos:
     plan_fin: 2027-02-28
     inicio: 2026-11-22
     horas_plan: 55
-    horas: 0
+    horas: 2
     resultado:
       es: "Case study: ¿ayuda de verdad la búsqueda híbrida?"
       en: "Case study: does hybrid retrieval actually help?"
@@ -91,7 +91,7 @@ proyectos:
       es: "Case study: de la atención a un modelo ajustado de triaje"
       en: "Case study: from attention to a fine-tuned triage model"
 
-  - id: P7
+  - id: P6
     es: Harness del agente operador del homelab
     en: Homelab operator agent harness
     estado: pendiente
@@ -103,7 +103,7 @@ proyectos:
       es: "Case study: un harness completo para un agente que opera infraestructura real con OK humano"
       en: "Case study: a complete harness for an agent that operates real infrastructure with human approval"
 
-  - id: P6
+  - id: P7
     es: Cierre, charla y resumen anual
     en: Wrap-up, talk and yearly review
     estado: pendiente
