@@ -111,6 +111,15 @@ def _evidence(c: dict, lang: str, t: dict) -> str:
     return "<br>".join(parts)
 
 
+# Fallback presentation attributes: CSS overrides them, but if a stale
+# stylesheet is served the chart still reads instead of turning into black fills.
+POLY_ATTRS = {
+    "rd-grid": 'fill="none" stroke="#b8bdc9" stroke-width="1"',
+    "rd-target": 'fill="none" stroke="#0f9d8a" stroke-width="2" stroke-dasharray="6 5"',
+    "rd-now": 'fill="#2f4fb3" fill-opacity="0.18" stroke="#2f4fb3" stroke-width="2.5"',
+}
+
+
 def _pt(i: int, n: int, r: float) -> tuple[float, float]:
     a = -math.pi / 2 + 2 * math.pi * i / n
     return CX + r * math.cos(a), CY + r * math.sin(a)
@@ -119,21 +128,22 @@ def _pt(i: int, n: int, r: float) -> tuple[float, float]:
 def _poly(vals: list[float], cls: str) -> str:
     n = len(vals)
     pts = " ".join(f"{x:.1f},{y:.1f}" for x, y in (_pt(i, n, RR * v / MAX) for i, v in enumerate(vals)))
-    return f'<polygon points="{pts}" class="{cls}"/>'
+    attrs = POLY_ATTRS.get(cls.split()[0], "")
+    return f'<polygon points="{pts}" class="{cls}" {attrs}/>'
 
 
 def radar(comps: list[dict], lang: str, t: dict) -> str:
     n = len(comps)
     e = html.escape
     out = [
-        f'<div class="rd"><svg class="rd-svg" viewBox="0 0 {RW} {RH}" role="img" '
+        f'<div class="rd"><svg class="rd-svg" viewBox="0 0 {RW} {RH}" width="{RW}" height="{RH}" style="max-width:100%;height:auto" role="img" '
         f'aria-label="{e(t["radar"])}"><title>{e(t["radar"])}</title>'
     ]
     for lvl in range(1, MAX + 1):
         out.append(_poly([lvl] * n, "rd-grid rd-grid--outer" if lvl == MAX else "rd-grid"))
     for i in range(n):
         x, y = _pt(i, n, RR)
-        out.append(f'<line x1="{CX}" y1="{CY}" x2="{x:.1f}" y2="{y:.1f}" class="rd-axis"/>')
+        out.append(f'<line x1="{CX}" y1="{CY}" x2="{x:.1f}" y2="{y:.1f}" class="rd-axis" stroke="#b8bdc9"/>')
     for lvl in range(1, MAX + 1):
         out.append(f'<text x="{CX + 4}" y="{CY - RR * lvl / MAX + 11:.1f}" class="rd-tick">{lvl}</text>')
     out.append(_poly([c["objetivo"] for c in comps], "rd-target"))
@@ -141,7 +151,7 @@ def radar(comps: list[dict], lang: str, t: dict) -> str:
     for i, c in enumerate(comps):
         x, y = _pt(i, n, RR * c["nivel"] / MAX)
         out.append(
-            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4.5" class="rd-pt">'
+            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4.5" class="rd-pt" fill="#2f4fb3">'
             f'<title>{e(c[lang])}: {c["nivel"]}/{MAX}</title></circle>'
         )
         lx, ly = _pt(i, n, RR + 24)
