@@ -49,7 +49,9 @@
 - titulo: "Curso n8n. Agentes de IA Avanzados: MCP, WhatsApp, Voz"
   plataforma: Udemy
   tema: agentes
-  avance: 86
+  avance: 100
+  fin: 2025-06
+  certificado: https://www.udemy.com/certificate/UC-04dbc055-f2a5-46e0-b570-2347b1a46cb9/
 
 - titulo: "Curso completo de Python"
   autor: Santiago Hernández
@@ -112,7 +114,7 @@
 - titulo: "The Ultimate MySQL Bootcamp"
   plataforma: Udemy
   tema: datos
-  avance: 99
+  avance: 100
   fin: 2023-03
   certificado: https://www.udemy.com/certificate/UC-aecf5fce-db8b-4f4c-9954-43c1283a2544/
 
@@ -122,6 +124,13 @@
   avance: 99
   fin: 2023-04
   certificado: https://www.udemy.com/certificate/UC-503e2842-7370-41d1-a7aa-618041131912/
+
+- titulo: "Análisis de Redes Organizacionales para Impacto Estratégico"
+  plataforma: Udemy
+  tema: datos
+  avance: 100
+  fin: 2023-11
+  certificado: https://www.udemy.com/certificate/UC-e1370855-6a36-4e26-a7b1-fe66dcee8336/
 
 # Planned in the roadmap (bought when their project starts).
 - titulo: "Testing AI Systems with DeepEval: AI Agents, Chatbots & RAG"
