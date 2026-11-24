@@ -33,7 +33,7 @@
   autor: Ed Donner
   plataforma: Udemy
   tema: llm
-  avance: 3
+  avance: 4
   plan: P1
 
 - titulo: "Spec Driven Development (SDD) y Agentes IA"
@@ -57,7 +57,7 @@
   autor: Santiago Hernández
   plataforma: Udemy
   tema: python
-  avance: 61
+  avance: 67
 
 - titulo: "Inteligencia Artificial y Deep Learning desde cero en Python"
   autor: Santiago Hernández
@@ -167,6 +167,12 @@
   avance: 100
   fin: 2024-12
   certificado: https://www.udemy.com/certificate/UC-708e3c80-cf7b-4d89-ae5e-618f6fe8773b/
+
+- titulo: "Vim, aumenta tu velocidad de desarrollo"
+  plataforma: Udemy
+  tema: ingenieria
+  avance: 100
+  fin: 2026-11
 
 # Planned in the roadmap (bought when their project starts).
 - titulo: "Testing AI Systems with DeepEval: AI Agents, Chatbots & RAG"
