@@ -32,6 +32,7 @@ TEMAS = {
     "sistemas": ("Sistemas", "Systems"),
     "seguridad": ("Seguridad", "Security"),
     "datos": ("Datos", "Data"),
+    "lowcode": ("Low-code (Power Platform)", "Low-code (Power Platform)"),
 }
 
 TEXT = {

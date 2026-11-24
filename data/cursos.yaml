@@ -132,6 +132,42 @@
   fin: 2023-11
   certificado: https://www.udemy.com/certificate/UC-e1370855-6a36-4e26-a7b1-fe66dcee8336/
 
+- titulo: "The Modern Python 3 Bootcamp"
+  autor: Colt Steele
+  plataforma: Udemy
+  tema: python
+  avance: 100
+  fin: 2023-10
+  certificado: https://www.udemy.com/certificate/UC-2f2c6511-d71e-4a06-a640-27330bb02838/
+
+- titulo: "The Ultimate Pandas Bootcamp: Advanced Python Data Analysis"
+  plataforma: Udemy
+  tema: datos
+  avance: 100
+  fin: 2023-11
+  certificado: https://www.udemy.com/certificate/UC-8c3cc057-e2b7-44fc-a6e5-219299178fb9/
+
+- titulo: "Mastering Microsoft Power Apps 2026: From Zero to Hero"
+  plataforma: Udemy
+  tema: lowcode
+  avance: 100
+  fin: 2025-01
+  certificado: https://www.udemy.com/certificate/UC-b7354a98-1481-4df9-9ec6-adea5c928303/
+
+- titulo: "Mastering Microsoft Power Automate 2026: From Zero to Hero"
+  plataforma: Udemy
+  tema: lowcode
+  avance: 100
+  fin: 2024-12
+  certificado: https://www.udemy.com/certificate/UC-11a92a1a-2b11-4480-b355-26a20f15341f/
+
+- titulo: "Build Solutions with Power Apps, Power Automate & SharePoint"
+  plataforma: Udemy
+  tema: lowcode
+  avance: 100
+  fin: 2024-12
+  certificado: https://www.udemy.com/certificate/UC-708e3c80-cf7b-4d89-ae5e-618f6fe8773b/
+
 # Planned in the roadmap (bought when their project starts).
 - titulo: "Testing AI Systems with DeepEval: AI Agents, Chatbots & RAG"
   autor: Rahul Shetty Academy
