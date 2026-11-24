@@ -9,7 +9,8 @@
 #   plataforma  Udemy, Coursera, internal...
 #   tema        one of the keys in TEMAS inside hooks/cursos.py
 #   avance      0-100. >= 98 counts as completed
-#   fin         YYYY-MM when completed (optional)
+#   fin         YYYY-MM when completed (optional; the certificate date if there is one)
+#   certificado URL of the completion certificate (optional)
 #   plan        roadmap project it belongs to, e.g. P1 (optional)
 #   comprado    false for courses planned in the roadmap but not bought yet
 #   mostrar     false to keep it in the file but off the site (default true)
@@ -62,55 +63,65 @@
   tema: dl
   avance: 100
   fin: 2024-12
+  certificado: https://www.udemy.com/certificate/UC-5febb58f-692d-44a7-a683-2d5eba8fa2df/
 
 - titulo: "Machine Learning y Data Science con Python"
   autor: Santiago Hernández
   plataforma: Udemy
   tema: ml
-  avance: 93
-  fin: 2024-12
+  avance: 100
+  fin: 2023-12
+  certificado: https://www.udemy.com/certificate/UC-f9cdbd68-f8c4-4253-8045-4bc692a7c576/
 
 - titulo: "Curso Completo de Claude Code"
   autor: Santiago Hernández
   plataforma: Udemy
   tema: agentes
   avance: 100
-  fin: 2026-07
+  fin: 2026-06
+  certificado: https://www.udemy.com/certificate/UC-47096f62-d6e5-4187-9758-61e99564d709/
 
 - titulo: "Curso n8n. Crea Agentes de IA Sin Programar"
   plataforma: Udemy
   tema: agentes
   avance: 98
   fin: 2025-06
+  certificado: https://www.udemy.com/certificate/UC-6f330143-6796-488a-8b04-1da041cbc926/
 
 - titulo: "Ultimate GIT"
   plataforma: Udemy
   tema: ingenieria
   avance: 100
   fin: 2026-08
+  certificado: https://www.udemy.com/certificate/UC-d66c7787-7e9e-42a3-bbf9-b80aea818b43/
 
 - titulo: "Curso completo de Linux y Shell Script"
   plataforma: Udemy
   tema: sistemas
   avance: 100
   fin: 2024-11
+  certificado: https://www.udemy.com/certificate/UC-575b70d9-d0ee-4c77-b04b-e03a02e2ab8c/
 
 - titulo: "Ciberseguridad Defensiva"
   plataforma: Udemy
   tema: seguridad
   avance: 100
   fin: 2024-12
+  certificado: https://www.udemy.com/certificate/UC-8a1548bc-3a51-421e-b2fc-6197c95290bb/
 
 - titulo: "The Ultimate MySQL Bootcamp"
   plataforma: Udemy
   tema: datos
   avance: 99
-  fin: 2025-06
+  fin: 2023-03
+  certificado: https://www.udemy.com/certificate/UC-aecf5fce-db8b-4f4c-9954-43c1283a2544/
 
 - titulo: "Power BI Desktop"
   plataforma: Udemy
   tema: datos
   avance: 99
+  fin: 2023-04
+  certificado: https://www.udemy.com/certificate/UC-503e2842-7370-41d1-a7aa-618041131912/
 
 # Planned in the roadmap (bought when their project starts).
 - titulo: "Testing AI Systems with DeepEval: AI Agents, Chatbots & RAG"

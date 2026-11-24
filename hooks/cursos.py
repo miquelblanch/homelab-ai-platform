@@ -43,6 +43,8 @@ TEXT = {
         "tema": "Tema",
         "avance": "Avance",
         "fin": "Terminado",
+        "certificado": "Certificado",
+        "ver": "Ver",
         "proyecto": "Proyecto",
         "resumen": "{t} terminados · {c} en curso · {p} previstos.",
         "vacio": "Ninguno por ahora.",
@@ -55,6 +57,8 @@ TEXT = {
         "tema": "Topic",
         "avance": "Progress",
         "fin": "Completed",
+        "certificado": "Certificate",
+        "ver": "View",
         "proyecto": "Project",
         "resumen": "{t} completed · {c} in progress · {p} planned.",
         "vacio": "None yet.",
@@ -70,6 +74,8 @@ def load(path: Path = DATA) -> list[dict]:
         if c["tema"] not in TEMAS:
             raise ValueError(f"cursos.yaml: unknown tema {c['tema']!r} in {c['titulo']!r}")
         c.setdefault("avance", 0)
+        if c.get("certificado") and not str(c["certificado"]).startswith("https://"):
+            raise ValueError(f"cursos.yaml: certificado must be an https URL in {c['titulo']!r}")
         if not 0 <= c["avance"] <= 100:
             raise ValueError(f"cursos.yaml: avance out of range in {c['titulo']!r}")
     return [c for c in cursos if c.get("mostrar", True)]
@@ -94,6 +100,13 @@ def _title(c: dict) -> str:
     t = html.escape(c["titulo"])
     autor = f" · {html.escape(c['autor'])}" if c.get("autor") else ""
     return f"**{t}**<br><small>{html.escape(c.get('plataforma', ''))}{autor}</small>"
+
+
+def _cert(c: dict, label: str) -> str:
+    url = c.get("certificado")
+    if not url:
+        return ""
+    return f'<a href="{html.escape(url)}" target="_blank" rel="noopener">{label}</a>'
 
 
 def _bar(avance: int) -> str:
@@ -128,8 +141,14 @@ def render(cursos: list[dict], lang: str) -> str:
 
     out += ["", f"## {t['terminados']}", ""]
     if terminados:
-        out += [f"| {t['curso']} | {t['tema']} | {t['fin']} |", "| --- | --- | --- |"]
-        out += [f"| {_title(c)} | {tema(c)} | {c.get('fin', '')} |" for c in terminados]
+        out += [
+            f"| {t['curso']} | {t['tema']} | {t['fin']} | {t['certificado']} |",
+            "| --- | --- | --- | --- |",
+        ]
+        out += [
+            f"| {_title(c)} | {tema(c)} | {c.get('fin', '')} | {_cert(c, t['ver'])} |"
+            for c in terminados
+        ]
     else:
         out.append(t["vacio"])
     return "\n".join(out) + "\n"
