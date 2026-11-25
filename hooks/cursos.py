@@ -54,7 +54,6 @@ TEXT = {
         "certificado": "Certificado",
         "ver": "Ver",
         "cerrar": "Cerrar",
-        "verificar": "Verificar en Udemy",
         "proyecto": "Proyecto",
         "resumen": "{t} terminados · {c} en curso · {p} previstos.",
         "vacio": "Ninguno por ahora.",
@@ -71,7 +70,6 @@ TEXT = {
         "certificado": "Certificate",
         "ver": "View",
         "cerrar": "Close",
-        "verificar": "Verify on Udemy",
         "proyecto": "Project",
         "resumen": "{t} completed · {c} in progress · {p} planned.",
         "vacio": "None yet.",
@@ -139,13 +137,11 @@ def _cert_modal(c: dict, t: dict) -> str:
     if not code:
         return ""
     titulo = html.escape(c["titulo"])
-    url = html.escape(c["certificado"])
     return (
         f'<div class="cert-modal" id="cert-{code}" role="dialog" aria-label="{titulo}">'
         f'<a class="cert-backdrop" href="#{t["terminados_id"]}" aria-label="{t["cerrar"]}"></a>'
         f'<figure><img src="/certificados/{code}.jpg" alt="{titulo}" loading="lazy">'
-        f'<figcaption><a href="{url}" target="_blank" rel="noopener">{t["verificar"]}</a>'
-        f' · <a href="#{t["terminados_id"]}">{t["cerrar"]}</a></figcaption></figure></div>'
+        f'<figcaption><a href="#{t["terminados_id"]}">{t["cerrar"]}</a></figcaption></figure></div>'
     )
 
 
