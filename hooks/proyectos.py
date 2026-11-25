@@ -15,6 +15,19 @@ Progress rule: a finished project counts as 100 %; one in progress counts its
 real hours over its planned hours (capped at 95 % until it is marked done);
 a planned one counts 0 %. Overall progress weights each project by its
 planned hours.
+
+Pace KPIs (under the station line), both computed at the `actualizado` date,
+which is when the hours were last reported:
+
+- Against the plan: the plan spreads each project's planned hours linearly
+  over its planned window. "Done" is the same planned-hours equivalent the
+  big percentage uses (progress x planned hours). The gap is the number of
+  days between `actualizado` and the day the plan reaches what is done
+  (positive = ahead).
+- Estimated end at the current pace: planned hours still to do, divided by
+  real hours per week since the roadmap started (earliest `inicio`). With
+  only a few days of data that number swings wildly, so it is shown only
+  after MIN_SEMANAS weeks; before that the tile says from which date.
 """
 
 from __future__ import annotations
@@ -30,6 +43,15 @@ DATA = Path(__file__).resolve().parent.parent / "data" / "proyectos.yaml"
 MARKER = "<!-- proyectos -->"
 ESTADOS = ("pendiente", "en_curso", "hecho")
 EN_CURSO_MAX = 95
+MIN_SEMANAS = 4  # weeks of data before projecting an end date
+EN_PLAN_DIAS = 7  # a gap smaller than this reads as "on plan"
+
+MESES = {
+    "es": ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
+           "agosto", "septiembre", "octubre", "noviembre", "diciembre"],
+    "en": ["January", "February", "March", "April", "May", "June", "July",
+           "August", "September", "October", "November", "December"],
+}
 
 TEXT = {
     "es": {
@@ -39,6 +61,23 @@ TEXT = {
         "aria": "Avance del roadmap",
         "ahora": "Ahora",
         "regla": "Un proyecto terminado cuenta como 100 %; uno en curso, sus horas reales sobre las previstas; el avance total pondera cada proyecto por sus horas previstas.",
+        "regla_ritmo": "Respecto al plan: lo hecho frente a lo que el plan tendría hecho a esa fecha, repartiendo las horas de cada proyecto de forma lineal en su ventana prevista. Fin estimado: las horas previstas que faltan divididas por las horas reales por semana desde el arranque; se muestra a partir de {min} semanas de datos.",
+        "plan_k": "Respecto al plan",
+        "adelantado": "{n} adelantado",
+        "atrasado": "{n} atrasado",
+        "en_plan": "En plan",
+        "plan_sub": "{hecho} h hechas (equivalentes) · el plan llevaría {plan} h · a {act}",
+        "fin_k": "Fin estimado al ritmo actual",
+        "fin_v": "{mes} de {anyo}",
+        "fin_sub": "{ritmo} h/semana de media (plan: {plan} h) · {dif} el plan ({fin})",
+        "antes": "{n} antes que",
+        "despues": "{n} después que",
+        "igual": "igual que",
+        "pronto_v": "A partir del {fecha}",
+        "pronto_sub": "Con {dias} días de datos ({horas} h) la proyección no es fiable; se calcula con {min} semanas como mínimo.",
+        "sin_horas": "Sin horas registradas todavía.",
+        "semanas": ("semana", "semanas"),
+        "dias": ("día", "días"),
     },
     "en": {
         "avance": "of the roadmap complete",
@@ -47,6 +86,23 @@ TEXT = {
         "aria": "Roadmap progress",
         "ahora": "Now",
         "regla": "A finished project counts as 100 %; one in progress, its real hours over its planned hours; overall progress weights each project by its planned hours.",
+        "regla_ritmo": "Against the plan: what is done versus what the plan would have done by that date, spreading each project's hours linearly over its planned window. Estimated end: planned hours still to do divided by real hours per week since the start; shown once there are {min} weeks of data.",
+        "plan_k": "Against the plan",
+        "adelantado": "{n} ahead",
+        "atrasado": "{n} behind",
+        "en_plan": "On plan",
+        "plan_sub": "{hecho} h done (equivalent) · the plan would be at {plan} h · as of {act}",
+        "fin_k": "Estimated end at the current pace",
+        "fin_v": "{mes} {anyo}",
+        "fin_sub": "{ritmo} h/week on average (plan: {plan} h) · {dif} the plan ({fin})",
+        "antes": "{n} earlier than",
+        "despues": "{n} later than",
+        "igual": "same as",
+        "pronto_v": "From {fecha}",
+        "pronto_sub": "With {dias} days of data ({horas} h) a projection is not reliable; it needs at least {min} weeks.",
+        "sin_horas": "No hours logged yet.",
+        "semanas": ("week", "weeks"),
+        "dias": ("day", "days"),
     },
 }
 
@@ -91,6 +147,102 @@ def pct(p: dict) -> int:
 def overall(ps: list[dict]) -> int:
     plan = sum(p["horas_plan"] for p in ps)
     return round(sum(pct(p) * p["horas_plan"] for p in ps) / plan) if plan else 0
+
+
+def done_hours(ps: list[dict]) -> float:
+    """Planned-hours equivalent of what is done (what the big % measures)."""
+    return sum(pct(p) * p["horas_plan"] / 100 for p in ps)
+
+
+def plan_hours(ps: list[dict], day: dt.date) -> float:
+    """Hours the plan has done by the end of `day` (linear in each window)."""
+    total = 0.0
+    for p in ps:
+        dias = (p["plan_fin"] - p["plan_inicio"]).days + 1
+        hechos = (day - p["plan_inicio"]).days + 1
+        total += p["horas_plan"] * min(1.0, max(0.0, hechos / dias))
+    return total
+
+
+def ritmo(data: dict) -> dict:
+    """Gap against the plan (days, + = ahead) and estimated end date."""
+    ps = data["proyectos"]
+    ref = _date(data["actualizado"])
+    hecho = done_hours(ps)
+    plan_hoy = plan_hours(ps, ref)
+    p0 = min(p["plan_inicio"] for p in ps)
+    p1 = max(p["plan_fin"] for p in ps)
+    dias = [p0 + dt.timedelta(days=i) for i in range(-1, (p1 - p0).days + 1)]
+    if abs(hecho - plan_hoy) < 0.05:
+        gap = 0
+    elif hecho > plan_hoy:  # first day the plan reaches what is done
+        gap = next(((d - ref).days for d in dias if d > ref and plan_hours(ps, d) >= hecho - 1e-9),
+                   (p1 - ref).days)
+    else:  # last day the plan was still at or below what is done
+        gap = next(((d - ref).days for d in reversed(dias) if d < ref and plan_hours(ps, d) <= hecho + 1e-9),
+                   (p0 - ref).days)
+    inicios = [p["inicio"] for p in ps if p.get("inicio")]
+    arranque = min(inicios) if inicios else ref
+    dias_datos = (ref - arranque).days + 1
+    horas = sum(p["horas"] for p in ps)
+    plan_total = sum(p["horas_plan"] for p in ps)
+    r = {
+        "ref": ref, "hecho": hecho, "plan_hoy": plan_hoy, "gap": gap, "plan_fin": p1,
+        "dias_datos": dias_datos, "horas": horas, "fin": None, "ritmo": None,
+        "desde": arranque + dt.timedelta(weeks=MIN_SEMANAS),
+    }
+    if dias_datos >= 7 * MIN_SEMANAS and horas > 0:
+        r["ritmo"] = horas / (dias_datos / 7)
+        r["fin"] = ref + dt.timedelta(weeks=(plan_total - hecho) / r["ritmo"])
+    return r
+
+
+def _span(dias: int, t: dict) -> str:
+    """'3 weeks' / '5 days' for a positive number of days."""
+    if dias < 14:
+        return f"{dias} {t['dias'][dias != 1]}"
+    n = round(dias / 7)
+    return f"{n} {t['semanas'][n != 1]}"
+
+
+def _fecha(d: dt.date) -> str:
+    return d.strftime("%d-%m-%Y")
+
+
+def render_ritmo(data: dict, lang: str) -> str:
+    t = TEXT.get(lang, TEXT["es"])
+    e = html.escape
+    r = ritmo(data)
+    g = r["gap"]
+    if abs(g) < EN_PLAN_DIAS:
+        estado, valor = "ok", t["en_plan"]
+    elif g > 0:
+        estado, valor = "ahead", t["adelantado"].format(n=_span(g, t))
+    else:
+        estado, valor = "late", t["atrasado"].format(n=_span(-g, t))
+    plan_sub = t["plan_sub"].format(hecho=f"{r['hecho']:.0f}", plan=f"{r['plan_hoy']:.0f}", act=_fecha(r["ref"]))
+    if r["fin"]:
+        d = (r["plan_fin"] - r["fin"]).days
+        dif = (t["igual"] if abs(d) < EN_PLAN_DIAS
+               else t["antes" if d > 0 else "despues"].format(n=_span(abs(d), t)))
+        fin_estado = "ok" if abs(d) < EN_PLAN_DIAS else ("ahead" if d > 0 else "late")
+        fin_v = t["fin_v"].format(mes=MESES[lang][r["fin"].month - 1], anyo=r["fin"].year)
+        fin_sub = t["fin_sub"].format(ritmo=f"{r['ritmo']:.1f}".replace(".", "," if lang == "es" else "."),
+                                      plan=f"{data.get('ritmo_plan', 7):g}", dif=dif, fin=_fecha(r["plan_fin"]))
+    elif r["horas"] == 0:
+        fin_estado, fin_v, fin_sub = "wait", "—", t["sin_horas"]
+    else:
+        fin_estado = "wait"
+        fin_v = t["pronto_v"].format(fecha=_fecha(r["desde"]))
+        fin_sub = t["pronto_sub"].format(dias=r["dias_datos"], horas=f"{r['horas']:g}", min=MIN_SEMANAS)
+    return (
+        '<div class="pg-kpis">'
+        f'<div class="pg-kpi pg-kpi--{estado}"><span class="pg-kpi-k">{e(t["plan_k"])}</span>'
+        f'<span class="pg-kpi-v">{e(valor)}</span><span class="pg-kpi-s">{e(plan_sub)}</span></div>'
+        f'<div class="pg-kpi pg-kpi--{fin_estado}"><span class="pg-kpi-k">{e(t["fin_k"])}</span>'
+        f'<span class="pg-kpi-v">{e(fin_v)}</span><span class="pg-kpi-s">{e(fin_sub)}</span></div>'
+        "</div>"
+    )
 
 
 RING_R = 15.9155  # circumference 100, so a stroke-dasharray is a percentage
@@ -148,7 +300,7 @@ def render(data: dict, lang: str) -> str:
             f'<p class="pg-now"><span class="pg-now-tag">{e(t["ahora"])}</span> '
             f'<strong>{actual["id"]} · {e(actual[lang])}</strong> · {pct(actual)}&nbsp;%</p>'
         )
-    out += [f'<p class="pg-detail">{e(detalle)}</p>', "</div>", '<div class="pg-rows">']
+    out += [render_ritmo(data, lang), f'<p class="pg-detail">{e(detalle)}</p>', "</div>", '<div class="pg-rows">']
     for p in ps:
         res = e(p.get("resultado", {}).get(lang, ""))
         if p.get("url") and res:
@@ -162,7 +314,11 @@ def render(data: dict, lang: str) -> str:
             f'<span class="pg-num">{pct(p)}&nbsp;%<small>{p["horas"]:g}/{p["horas_plan"]:g}&nbsp;h</small></span>'
             "</div>"
         )
-    out += ["</div>", f'<p class="pg-rule">{e(t["regla"])}</p>', "</div>"]
+    out += [
+        "</div>",
+        f'<p class="pg-rule">{e(t["regla"])} {e(t["regla_ritmo"].format(min=MIN_SEMANAS))}</p>',
+        "</div>",
+    ]
     return "\n".join(out) + "\n"
 
 
@@ -195,4 +351,6 @@ if __name__ == "__main__":
         assert r.count('class="pg-row ') == len(data["proyectos"])
         assert r.count('class="pg-st ') == len(data["proyectos"])
         assert "\n\n" not in r  # a blank line would end the raw HTML block
-    print(f"ok: {len(data['proyectos'])} projects, {overall(data['proyectos'])} % overall")
+    r = ritmo(data)
+    print(f"ok: {len(data['proyectos'])} projects, {overall(data['proyectos'])} % overall, "
+          f"gap {r['gap']:+d} days, end {r['fin'] or 'from ' + str(r['desde'])}")
