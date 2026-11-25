@@ -244,6 +244,7 @@
   --pg-fill-a: #2f4fb3;
   --pg-fill-b: #0f9d8a;
   --pg-todo: #c3c8d4;
+  --pg-late: #b45309;
   --rd-now-fill: rgba(47, 79, 179, 0.16);
   --rd-target: #0f9d8a;
   --rd-grid: #d9dce5;
@@ -257,6 +258,7 @@
   --pg-fill-a: #8ea6ff;
   --pg-fill-b: #3fd0b8;
   --pg-todo: #4a5367;
+  --pg-late: #f5b14c;
   --rd-now-fill: rgba(142, 166, 255, 0.22);
   --rd-target: #3fd0b8;
   --rd-grid: #333b4f;
@@ -293,6 +295,49 @@
   margin: 0.6rem 0 0;
   font-size: 0.72rem;
   color: var(--pg-muted);
+}
+/* Pace KPIs: gap against the plan and estimated end date. */
+.md-typeset .pg-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0.9rem 0 0;
+}
+.md-typeset .pg-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--pg-line);
+  border-left: 4px solid var(--pg-todo);
+  border-radius: 8px;
+  background: var(--md-default-bg-color);
+}
+.md-typeset .pg-kpi--ahead { border-left-color: var(--pg-fill-b); }
+.md-typeset .pg-kpi--ok { border-left-color: var(--pg-fill-a); }
+.md-typeset .pg-kpi--late { border-left-color: var(--pg-late); }
+.md-typeset .pg-kpi-k {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--pg-muted);
+}
+.md-typeset .pg-kpi-v {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--md-default-fg-color);
+}
+.md-typeset .pg-kpi--ahead .pg-kpi-v { color: var(--pg-fill-b); }
+.md-typeset .pg-kpi--late .pg-kpi-v { color: var(--pg-late); }
+.md-typeset .pg-kpi-s {
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: var(--pg-muted);
+}
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .pg-kpis { grid-template-columns: 1fr; }
 }
 .md-typeset .pg-rows {
   margin-top: 1rem;

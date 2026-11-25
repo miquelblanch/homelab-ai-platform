@@ -11,6 +11,9 @@
 #   horas              real hours so far (should match the learning log entries)
 #   resultado {es,en}  what the project delivers (the case study, when it exists)
 #   url                link to the result, once published
+#
+# ritmo_plan: planned hours per week (roadmap §8), shown next to the real pace
+ritmo_plan: 7
 
 actualizado: 2026-11-23
 
