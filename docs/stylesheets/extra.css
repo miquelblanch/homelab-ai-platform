@@ -644,3 +644,42 @@
   background: color-mix(in srgb, var(--pg-fill-b) 20%, transparent);
   color: var(--pg-fill-b);
 }
+
+/* Certificate lightbox on the courses page (pure CSS, opened via :target). */
+.cert-modal {
+  display: none;
+}
+.cert-modal:target {
+  display: flex;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.cert-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+}
+.cert-modal figure {
+  position: relative;
+  margin: 0;
+  max-width: min(1000px, 100%);
+  background: var(--md-default-bg-color);
+  border-radius: 0.4rem;
+  padding: 0.5rem;
+  text-align: center;
+}
+.cert-modal img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 80vh;
+  object-fit: contain;
+}
+.cert-modal figcaption {
+  margin-top: 0.4rem;
+  font-size: 0.75rem;
+}

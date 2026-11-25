@@ -10,7 +10,10 @@
 #   tema        one of the keys in TEMAS inside hooks/cursos.py
 #   avance      0-100. >= 98 counts as completed
 #   fin         YYYY-MM when completed (optional; the certificate date if there is one)
-#   certificado URL of the completion certificate (optional)
+#   certificado URL of the completion certificate (optional). For Udemy, also save
+#               its image as docs/certificados/<UC-code>.jpg (from
+#               udemy-certificate.s3.amazonaws.com/image/<UC-code>.jpg) so "Ver"
+#               opens it on this site; the self-test fails if it is missing.
 #   plan        roadmap project it belongs to, e.g. P1 (optional)
 #   comprado    false for courses planned in the roadmap but not bought yet
 #   mostrar     false to keep it in the file but off the site (default true)
