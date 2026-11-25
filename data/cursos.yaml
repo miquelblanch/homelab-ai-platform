@@ -178,6 +178,7 @@
   tema: ingenieria
   avance: 100
   fin: 2026-11
+  mostrar: false
 
 # Planned in the roadmap (bought when their project starts).
 - titulo: "Testing AI Systems with DeepEval: AI Agents, Chatbots & RAG"
