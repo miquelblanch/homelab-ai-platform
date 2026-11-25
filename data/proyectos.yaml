@@ -112,5 +112,5 @@ proyectos:
     horas_plan: 35
     horas: 0
     resultado:
-      es: "Examen final (test de conceptos y un RAG con evals sobre un corpus desconocido, sin límite de tiempo), charla de 20-30 minutos y autoevaluación con evidencias"
-      en: "Final exam (a concepts test and a RAG with evals on an unseen corpus, with no time limit), a 20-30 minute talk and a self-assessment with evidence"
+      es: "Examen final (test de conceptos y un RAG con evals sobre un corpus desconocido, con una semana de plazo), charla de 20-30 minutos y autoevaluación con evidencias"
+      en: "Final exam (a concepts test and a RAG with evals on an unseen corpus, within one week), a 20-30 minute talk and a self-assessment with evidence"
