@@ -9,11 +9,17 @@ replaces it with tables at build time, in the language being built.
 from __future__ import annotations
 
 import html
+import re
 from pathlib import Path
 
 import yaml
 
-DATA = Path(__file__).resolve().parent.parent / "data" / "cursos.yaml"
+ROOT = Path(__file__).resolve().parent.parent
+DATA = ROOT / "data" / "cursos.yaml"
+# Certificate images live in the repo, so "View" opens them on this site.
+# File name = Udemy certificate code, e.g. docs/certificados/UC-xxxx.jpg.
+CERT_DIR = ROOT / "docs" / "certificados"
+CERT_CODE = re.compile(r"(UC-[0-9a-f-]+)")
 MARKER = "<!-- cursos -->"
 DONE = 98  # Udemy rarely reaches 100 %: >= 98 counts as completed.
 
@@ -39,6 +45,7 @@ TEXT = {
     "es": {
         "en_curso": "En curso",
         "terminados": "Terminados",
+        "terminados_id": "terminados",
         "previstos": "Previstos en el roadmap",
         "curso": "Curso",
         "tema": "Tema",
@@ -46,6 +53,8 @@ TEXT = {
         "fin": "Terminado",
         "certificado": "Certificado",
         "ver": "Ver",
+        "cerrar": "Cerrar",
+        "verificar": "Verificar en Udemy",
         "proyecto": "Proyecto",
         "resumen": "{t} terminados · {c} en curso · {p} previstos.",
         "vacio": "Ninguno por ahora.",
@@ -53,6 +62,7 @@ TEXT = {
     "en": {
         "en_curso": "In progress",
         "terminados": "Completed",
+        "terminados_id": "completed",
         "previstos": "Planned in the roadmap",
         "curso": "Course",
         "tema": "Topic",
@@ -60,6 +70,8 @@ TEXT = {
         "fin": "Completed",
         "certificado": "Certificate",
         "ver": "View",
+        "cerrar": "Close",
+        "verificar": "Verify on Udemy",
         "proyecto": "Project",
         "resumen": "{t} completed · {c} in progress · {p} planned.",
         "vacio": "None yet.",
@@ -103,11 +115,38 @@ def _title(c: dict) -> str:
     return f"**{t}**<br><small>{html.escape(c.get('plataforma', ''))}{autor}</small>"
 
 
+def _cert_image(c: dict) -> str | None:
+    """Local image of the certificate, if it is in docs/certificados/."""
+    m = CERT_CODE.search(str(c.get("certificado", "")))
+    if m and (CERT_DIR / f"{m.group(1)}.jpg").exists():
+        return m.group(1)
+    return None
+
+
 def _cert(c: dict, label: str) -> str:
     url = c.get("certificado")
     if not url:
         return ""
+    code = _cert_image(c)
+    if code:
+        return f'<a href="#cert-{code}">{label}</a>'
     return f'<a href="{html.escape(url)}" target="_blank" rel="noopener">{label}</a>'
+
+
+def _cert_modal(c: dict, t: dict) -> str:
+    """Pure CSS lightbox (opened with :target, styled in extra.css)."""
+    code = _cert_image(c)
+    if not code:
+        return ""
+    titulo = html.escape(c["titulo"])
+    url = html.escape(c["certificado"])
+    return (
+        f'<div class="cert-modal" id="cert-{code}" role="dialog" aria-label="{titulo}">'
+        f'<a class="cert-backdrop" href="#{t["terminados_id"]}" aria-label="{t["cerrar"]}"></a>'
+        f'<figure><img src="/certificados/{code}.jpg" alt="{titulo}" loading="lazy">'
+        f'<figcaption><a href="{url}" target="_blank" rel="noopener">{t["verificar"]}</a>'
+        f' · <a href="#{t["terminados_id"]}">{t["cerrar"]}</a></figcaption></figure></div>'
+    )
 
 
 def _bar(avance: int) -> str:
@@ -150,6 +189,7 @@ def render(cursos: list[dict], lang: str) -> str:
             f"| {_title(c)} | {tema(c)} | {c.get('fin', '')} | {_cert(c, t['ver'])} |"
             for c in terminados
         ]
+        out += ["", *filter(None, (_cert_modal(c, t) for c in terminados))]
     else:
         out.append(t["vacio"])
     return "\n".join(out) + "\n"
@@ -167,4 +207,7 @@ if __name__ == "__main__":
     cursos = load()
     for lang in ("es", "en"):
         assert "|" in render(cursos, lang)
+    for c in cursos:
+        if c.get("certificado") and "udemy.com/certificate/" in str(c["certificado"]):
+            assert _cert_image(c), f"missing docs/certificados image for {c['titulo']!r}"
     print(f"ok: {len(cursos)} courses")
