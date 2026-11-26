@@ -2,7 +2,7 @@
 # bars. Edit at the monthly review or when a project moves.
 #
 # Fields per project
-#   id                 P0..P7 (listed in planned order)
+#   id                 P0..P8 (listed in planned order)
 #   es / en            name in each language
 #   estado             pendiente | en_curso | hecho
 #   plan_inicio/fin    planned window from the roadmap (YYYY-MM-DD)
@@ -15,7 +15,7 @@
 # ritmo_plan: planned hours per week (roadmap §8), shown next to the real pace
 ritmo_plan: 7
 
-actualizado: 2026-11-25
+actualizado: 2026-11-26
 
 proyectos:
   - id: P0
@@ -107,11 +107,23 @@ proyectos:
       en: "Case study: a complete harness for an agent that operates real infrastructure with human approval"
 
   - id: P7
+    es: LangChain y LangGraph
+    en: LangChain and LangGraph
+    estado: pendiente
+    plan_inicio: 2028-01-01
+    plan_fin: 2028-02-15
+    horas_plan: 40
+    horas: 0
+    resultado:
+      es: "Case study: la aprobación por Telegram del harness, hecha a mano y en LangGraph, comparadas"
+      en: "Case study: the harness's Telegram approval, hand-built vs LangGraph, compared"
+
+  - id: P8
     es: Examen final, charla y resumen anual
     en: Final exam, talk and yearly review
     estado: pendiente
-    plan_inicio: 2028-01-01
-    plan_fin: 2028-01-31
+    plan_inicio: 2028-02-16
+    plan_fin: 2028-03-31
     horas_plan: 35
     horas: 0
     resultado:

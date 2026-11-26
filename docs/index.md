@@ -13,7 +13,7 @@ hide:
 
 Soy ingeniero de telecomunicaciones y electrónica. Pasé 17 años en infraestructura, centros de datos y gestión de servicio, y desde 2016 trabajo en Talent en Grifols, donde hoy llevo proyectos de IA. En casa opero una plataforma de IA autoalojada en un Mac Mini, con las mismas prácticas que aplicaría a un sistema en producción.
 
-Este sitio recoge lo que construyo, cómo lo mido y lo que aprendo por el camino. Mi objetivo hasta enero de 2028 es llevar cada competencia de AI Engineering (evals, observabilidad, RAG, agentes, MCP, modelos locales, fine-tuning, deep learning y harness engineering) a un nivel que pueda **demostrar con datos**, no solo describir.
+Este sitio recoge lo que construyo, cómo lo mido y lo que aprendo por el camino. Mi objetivo hasta marzo de 2028 es llevar cada competencia de AI Engineering (evals, observabilidad, RAG, agentes, MCP, modelos locales, fine-tuning, deep learning y harness engineering) a un nivel que pueda **demostrar con datos**, no solo describir.
 
 </div>
 
