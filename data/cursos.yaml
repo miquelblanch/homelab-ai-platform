@@ -180,7 +180,15 @@
   fin: 2026-11
   mostrar: false
 
-# Bought, planned for P7 (after the hand-built harness of P6).
+# Bought, planned for P7 (after the hand-built harness of P6). Santiago Hernández
+# is the main one; of Eden Marco's, only what it does not cover.
+- titulo: "Curso Completo: LangChain, LangGraph y Agentes IA con Python"
+  autor: Santiago Hernández
+  plataforma: Udemy
+  tema: agentes
+  avance: 0
+  plan: P7
+
 - titulo: "LangChain & LangGraph AI Engineer: Agents, Agentic RAG & MCP"
   autor: Eden Marco
   plataforma: Udemy
@@ -190,13 +198,6 @@
 
 - titulo: "LangGraph- Develop LLM powered AI agents with LangGraph"
   autor: Eden Marco
-  plataforma: Udemy
-  tema: agentes
-  avance: 0
-  plan: P7
-
-- titulo: "Curso Completo: LangChain, LangGraph y Agentes IA con Python"
-  autor: Santiago Hernández
   plataforma: Udemy
   tema: agentes
   avance: 0
