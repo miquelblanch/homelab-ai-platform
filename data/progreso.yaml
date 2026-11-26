@@ -19,7 +19,7 @@
 #   cuatro      {es, en}: what "level 4" means for this skill
 
 actualizado: 2026-11-21
-fin: 2028-01
+fin: 2028-03
 
 competencias:
   - id: evals
@@ -155,7 +155,7 @@ competencias:
     corto: {es: Divulgación, en: Writing}
     nivel: 0
     objetivo: 4
-    hitos: {2027-02: 1, 2027-04: 2, 2027-07: 3, 2028-01: 4}
+    hitos: {2027-02: 1, 2027-04: 2, 2027-07: 3, 2028-03: 4}
     evidencia:
       - es: Case study del homelab publicado en español; este sitio, bilingüe.
         en: Homelab case study published in Spanish; this site, bilingual.
