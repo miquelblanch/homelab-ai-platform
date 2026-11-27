@@ -79,6 +79,7 @@ plugins:
             Cursos: Courses
             Progreso: Progress
             Un sitio bilingüe con dominio propio: A bilingual site on its own domain
+            Un re-ranker con LLM: An LLM reranker
             Visión general: Overview
             Arquitectura: Architecture
             El agente: The agent
@@ -95,6 +96,7 @@ nav:
   - Learning log:
       - learning-log/index.md
       - Un sitio bilingüe con dominio propio: learning-log/2026-11-21-sitio-publico.md
+      - Un re-ranker con LLM: learning-log/2026-11-27-reranker-llm.md
   - Homelab:
       - Visión general: homelab.md
       - Arquitectura: architecture.md
