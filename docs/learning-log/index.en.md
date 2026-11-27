@@ -8,4 +8,5 @@ One entry per piece I build: what it does, why I built it that way and which alt
 
 | Date | Entry | Project |
 | --- | --- | --- |
+| 2026-11-27 | [An LLM reranker](2026-11-27-reranker-llm.md) | P1 |
 | 2026-11-21 | [A bilingual site on its own domain](2026-11-21-sitio-publico.md) | P0 |

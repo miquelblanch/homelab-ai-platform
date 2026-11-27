@@ -8,4 +8,5 @@ Una entrada por cada pieza que construyo: qué hace, por qué la hice así y qu�
 
 | Fecha | Entrada | Proyecto |
 | --- | --- | --- |
+| 2026-11-27 | [Un re-ranker con LLM](2026-11-27-reranker-llm.md) | P1 |
 | 2026-11-21 | [Un sitio bilingüe con dominio propio](2026-11-21-sitio-publico.md) | P0 |
