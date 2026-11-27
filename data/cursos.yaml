@@ -39,6 +39,14 @@
   avance: 15
   plan: P1
 
+# Bought 2026-11-27 for the answer phase of P1.
+- titulo: "Testing AI Systems with DeepEval: AI Agents, Chatbots & RAG"
+  autor: Rahul Shetty Academy
+  plataforma: Udemy
+  tema: evals
+  avance: 25
+  plan: P1
+
 - titulo: "Spec Driven Development (SDD) y Agentes IA"
   plataforma: Udemy
   tema: sdd
@@ -204,14 +212,6 @@
   plan: P7
 
 # Planned in the roadmap (bought when their project starts).
-- titulo: "Testing AI Systems with DeepEval: AI Agents, Chatbots & RAG"
-  autor: Rahul Shetty Academy
-  plataforma: Udemy
-  tema: evals
-  avance: 0
-  plan: P1
-  comprado: false
-
 - titulo: "Ollama & Local LLMs: Fine-Tune, Deploy, Build Python AI Apps"
   autor: Abdurrahman Tekin
   plataforma: Udemy
